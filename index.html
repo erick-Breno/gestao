@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Controle Financeiro</title>
+    <title>Money Talk</title>
     <style>
       .login-page {
         position: fixed;
@@ -71,7 +71,7 @@
     <div id="login-page" class="login-page">
       <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-5/6 max-w-sm">
         <h1 class="text-2xl font-['Pacifico'] text-primary mb-6 text-center">
-          logo
+          Money Talk
         </h1>
         <form id="login-form" class="space-y-4">
           <div>
@@ -112,7 +112,7 @@
     <!-- Nav Bar -->
     <nav class="fixed top-0 w-full bg-gray-800 shadow-lg z-50">
       <div class="px-4 py-3 flex justify-between items-center">
-        <div class="font-['Pacifico'] text-xl text-primary">logo</div>
+        <div class="font-['Pacifico'] text-xl text-primary">Money Talk</div>
         <div class="flex items-center">
           <span id="username-display" class="mr-3 text-sm text-gray-300"></span>
           <div
@@ -382,7 +382,7 @@
             }
           });
         // Logout handler
-        document.getElementById("logout-btn").addEventListener("click", function () {
+        document.getElementById("ut-btn").addEventListener("click", function () {
           currentUser = null;
           localStorage.removeItem("currentUser");
           document.getElementById("login-page").style.display = "flex";
