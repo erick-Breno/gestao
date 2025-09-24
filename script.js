@@ -519,6 +519,7 @@ class BankBalanceTracker {
         filteredTransactions = filteredTransactions.filter((t) => t.bankId === bankId)
       }
     }
+
     if (filteredTransactions.length === 0) {
       const filterText =
         this.currentBankFilter === "all"
