@@ -81,13 +81,14 @@ body {
   box-shadow: var(--shadow-xl);
   width: 90%;
   max-width: 420px;
+  height: 90%;
   border: 1px solid var(--border-color);
   backdrop-filter: blur(10px);
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 1.5rem;
 }
 
 .app-logo {
@@ -106,28 +107,10 @@ body {
   background-clip: text;
 }
 
-.app-subtitle {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.login-footer {
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
-  text-align: center;
-}
-
-.login-footer p {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  line-height: 1.5;
+  gap: 1rem;
 }
 
 /* Form Elements */
