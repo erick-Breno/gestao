@@ -1,711 +1,291 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Money Talk</title>
-    <link rel="shortcut icon" href="icons8-money-96.png" type="image/x-icon">
-    <style>
-      .login-page {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #121212;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
-      }
-    </style>
-    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: { primary: "#6366F1", secondary: "#4F46E5" },
-            borderRadius: {
-              none: "0px",
-              sm: "4px",
-              DEFAULT: "8px",
-              md: "12px",
-              lg: "16px",
-              xl: "20px",
-              "2xl": "24px",
-              "3xl": "32px",
-              full: "9999px",
-              button: "8px",
-            },
-          },
-        },
-      };
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Balance Tracker</title>
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
-    <style>
-      :where([class^="ri-"])::before { content: "\f3c2"; }
-      body {
-      background-color: #121212;
-      color: #e0e0e0;
-      }
-      input[type="number"]::-webkit-inner-spin-button,
-      input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-      }
-      input[type="number"] {
-      -moz-appearance: textfield;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-900 text-gray-100">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Page -->
     <div id="login-page" class="login-page">
-      <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-5/6 max-w-sm">
-        <h1 class="text-2xl font-['Pacifico'] text-primary mb-6 text-center">
-          Money Talk
-        </h1>
-        <form id="login-form" class="space-y-4">
-          <div>
-            <label for="username" class="block text-sm text-gray-400 mb-1"
-              >Usuário</label
-            >
-            <input
-              type="text"
-              id="username"
-              class="w-full bg-gray-700 border-none rounded p-2 text-gray-100"
-              required
-            />
-          </div>
-          <div>
-            <label for="password" class="block text-sm text-gray-400 mb-1"
-              >Senha</label
-            >
-            <input
-              type="password"
-              id="password"
-              class="w-full bg-gray-700 border-none rounded p-2 text-gray-100"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            class="w-full bg-primary hover:bg-secondary text-white py-2 px-4 !rounded-button transition-colors"
-          >
-            Entrar
-          </button>
-        </form>
-        <div
-          id="login-error"
-          class="mt-4 text-red-500 text-sm text-center hidden"
-        ></div>
-      </div>
-    </div>
-    <!-- Nav Bar -->
-    <nav class="fixed top-0 w-full bg-gray-800 shadow-lg z-50">
-      <div class="px-4 py-3 flex justify-between items-center">
-        <div class="font-['Pacifico'] text-xl text-primary">Money Talk</div>
-        <div class="flex items-center">
-          <span id="username-display" class="mr-3 text-sm text-gray-300"></span>
-          <div
-            id="logout-btn"
-            class="w-8 h-8 flex items-center justify-center cursor-pointer"
-          >
-            <i class="ri-logout-box-line text-gray-300 ri-lg"></i>
-          </div>
+        <div class="login-container">
+            <div class="login-header">
+                <div class="app-logo" aria-label="Logo do aplicativo">💰</div>
+                <h1 class="app-title">Bank Balance Tracker</h1>
+                <p class="app-subtitle">Gerencie suas finanças com facilidade</p>
+            </div>
+            <form id="login-form" class="login-form" aria-label="Formulário de Login">
+                <div class="input-group">
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="ri-login-box-line" aria-hidden="true"></i>
+                    Entrar
+                </button>
+            </form>
+            <div id="login-error" class="error-message hidden" role="alert"></div>
+            <div class="login-footer">
+                <p>Usuários de teste: <strong>erick</strong> (Gaby128) | <strong>gabriela</strong> (gaby128)</p>
+            </div>
         </div>
-      </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar hidden" aria-label="Barra de Navegação Principal">
+        <div class="nav-content">
+            <div class="nav-brand">
+                <span class="nav-logo" aria-label="Logo do aplicativo">💰</span>
+                <span class="app-title">Bank Balance Tracker</span>
+            </div>
+            <div class="nav-actions">
+                <button id="logout-btn" class="logout-btn" title="Sair" aria-label="Sair da conta">
+                    <i class="ri-logout-box-line" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
     </nav>
+
     <!-- Main Content -->
-    <main class="pt-16 pb-20 px-4">
-      <!-- Resumo Financeiro -->
-      <section class="mt-4 mb-6">
-        <h2 class="text-lg font-semibold mb-3">Resumo Financeiro</h2>
-        <div class="grid grid-cols-3 gap-3">
-          <div class="bg-gray-800 p-3 rounded shadow-md">
-            <p class="text-xs text-gray-400 mb-1">Receitas</p>
-            <p class="text-green-500 font-semibold" id="total-receitas">
-              R$ 0,00
-            </p>
-          </div>
-          <div class="bg-gray-800 p-3 rounded shadow-md">
-            <p class="text-xs text-gray-400 mb-1">Despesas</p>
-            <p class="text-red-500 font-semibold" id="total-despesas">
-              R$ 0,00
-            </p>
-          </div>
-          <div class="bg-gray-800 p-3 rounded shadow-md">
-            <p class="text-xs text-gray-400 mb-1">Saldo</p>
-            <p class="font-semibold" id="saldo-total">R$ 0,00</p>
-          </div>
-        </div>
-      </section>
-      <!-- Gráfico -->
-      <section class="mb-6">
-        <div class="bg-gray-800 p-3 rounded shadow-md">
-          <h2 class="text-lg font-semibold mb-3">Despesas por Categoria</h2>
-          <div id="chart" class="w-full h-80"></div>
-        </div>
-      </section>
-      <!-- Formulário de Cadastro -->
-      <section class="mb-6">
-        <div class="bg-gray-800 p-4 rounded shadow-md">
-          <h2 class="text-lg font-semibold mb-3">Nova Transação</h2>
-          <form id="transaction-form" class="space-y-4">
-            <div>
-              <label for="description" class="block text-sm text-gray-400 mb-1"
-                >Descrição</label
-              >
-              <input
-                type="text"
-                id="description"
-                class="w-full bg-gray-700 border-none rounded p-2 text-gray-100"
-                placeholder="Ex: Mercado, Salário"
-                required
-              />
+    <main class="main-content hidden">
+        <!-- Bank Management Section -->
+        <section class="bank-management" aria-labelledby="banks-section-title">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2 id="banks-section-title"><i class="ri-bank-line" aria-hidden="true"></i> Meus Bancos</h2>
+                    <p class="section-subtitle">Gerencie suas contas bancárias</p>
+                </div>
+                <button id="add-bank-btn" class="btn-secondary" aria-label="Adicionar novo banco">
+                    <i class="ri-add-line" aria-hidden="true"></i> Adicionar Banco
+                </button>
             </div>
-            <div>
-              <label for="amount" class="block text-sm text-gray-400 mb-1"
-                >Valor (R$)</label
-              >
-              <input
-                type="number"
-                id="amount"
-                class="w-full bg-gray-700 border-none rounded p-2 text-gray-100"
-                placeholder="0,00"
-                min="0.01"
-                step="0.01"
-                required
-              />
+            <div id="banks-container" class="banks-grid"></div>
+        </section>
+
+        <!-- Bank Tabs -->
+        <section class="bank-tabs-section" aria-labelledby="bank-tabs-title">
+            <div class="tabs-container">
+                <div id="bank-tabs" class="bank-tabs" role="tablist"></div>
             </div>
-            <div>
-              <label class="block text-sm text-gray-400 mb-1">Tipo</label>
-              <div class="flex space-x-3">
-                <label class="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="type"
-                    value="receita"
-                    class="hidden"
-                    checked
-                  />
-                  <div
-                    class="w-5 h-5 rounded-full border border-green-500 flex items-center justify-center mr-2 type-radio"
-                  >
-                    <div
-                      class="w-3 h-3 rounded-full bg-green-500 hidden type-radio-dot"
-                    ></div>
-                  </div>
-                  <span>Receita</span>
-                </label>
-                <label class="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="type"
-                    value="despesa"
-                    class="hidden"
-                  />
-                  <div
-                    class="w-5 h-5 rounded-full border border-red-500 flex items-center justify-center mr-2 type-radio"
-                  >
-                    <div
-                      class="w-3 h-3 rounded-full bg-red-500 hidden type-radio-dot"
-                    ></div>
-                  </div>
-                  <span>Despesa</span>
-                </label>
-              </div>
+        </section>
+
+        <!-- Financial Summary -->
+        <section class="financial-summary" aria-labelledby="summary-section-title">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2 id="summary-section-title"><i class="ri-pie-chart-line" aria-hidden="true"></i> Resumo Financeiro</h2>
+                    <p class="section-subtitle">Visão geral das suas finanças</p>
+                </div>
             </div>
-            <div>
-              <label for="category" class="block text-sm text-gray-400 mb-1"
-                >Categoria</label
-              >
-              <select
-                id="category"
-                class="w-full bg-gray-700 border-none rounded p-2 text-gray-100"
-                required
-              >
-                <option value="">Selecione uma categoria</option>
-                <option value="Alimentação">Alimentação</option>
-                <option value="Transporte">Transporte</option>
-                <option value="Lazer">Lazer</option>
-                <option value="Trabalho">Trabalho</option>
-                <option value="Saúde">Saúde</option>
-                <option value="Educação">Educação</option>
-                <option value="Moradia">Moradia</option>
-                <option value="Outros">Outros</option>
-              </select>
+            <div class="summary-grid">
+                <div class="summary-card income">
+                    <div class="card-icon" aria-hidden="true">
+                        <i class="ri-arrow-up-circle-line"></i>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-label">Receitas</p>
+                        <p class="card-value" id="total-receitas">R$ 0,00</p>
+                    </div>
+                </div>
+                <div class="summary-card expense">
+                    <div class="card-icon" aria-hidden="true">
+                        <i class="ri-arrow-down-circle-line"></i>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-label">Despesas</p>
+                        <p class="card-value" id="total-despesas">R$ 0,00</p>
+                    </div>
+                </div>
+                <div class="summary-card balance">
+                    <div class="card-icon" aria-hidden="true">
+                        <i class="ri-wallet-line"></i>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-label">Saldo Total</p>
+                        <p class="card-value" id="saldo-total">R$ 0,00</p>
+                    </div>
+                </div>
             </div>
-            <div>
-              <label for="date" class="block text-sm text-gray-400 mb-1"
-                >Data</label
-              >
-              <input
-                type="date"
-                id="date"
-                class="w-full bg-gray-700 border-none rounded p-2 text-gray-100"
-                required
-              />
+        </section>
+
+        <!-- Chart Section -->
+        <section class="chart-section" aria-labelledby="chart-section-title">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="section-title">
+                        <h2 id="chart-section-title"><i class="ri-bar-chart-line" aria-hidden="true"></i> Análise Financeira</h2>
+                        <p class="section-subtitle">Visualize seus dados financeiros</p>
+                    </div>
+                    <div class="chart-controls">
+                        <label for="chart-bank-filter" class="visually-hidden">Filtrar por banco</label>
+                        <select id="chart-bank-filter" class="chart-filter" aria-label="Filtrar gráficos por banco">
+                            <option value="all">Todos os Bancos</option>
+                        </select>
+                        <label for="chart-type-filter" class="visually-hidden">Tipo de gráfico</label>
+                        <select id="chart-type-filter" class="chart-filter" aria-label="Selecionar tipo de gráfico">
+                            <option value="category">Por Categoria</option>
+                            <option value="bank">Por Banco</option>
+                            <option value="timeline">Linha do Tempo</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="chart" class="chart" role="img" aria-label="Gráfico financeiro"></div>
             </div>
-            <button
-              type="submit"
-              class="w-full bg-primary hover:bg-secondary text-white py-2 px-4 !rounded-button transition-colors"
-            >
-              Adicionar Transação
-            </button>
-          </form>
-        </div>
-      </section>
-      <!-- Listagem de Transações -->
-      <section>
-        <h2 class="text-lg font-semibold mb-3">Histórico de Transações</h2>
-        <div class="bg-gray-800 rounded shadow-md overflow-hidden">
-          <ul id="transactions-list" class="divide-y divide-gray-700">
-            <!-- Transações serão inseridas aqui via JavaScript -->
-            <li class="p-4 text-center text-gray-500">
-              Nenhuma transação registrada
-            </li>
-          </ul>
-        </div>
-      </section>
+        </section>
+
+        <!-- Transaction Form -->
+        <section class="transaction-form-section" aria-labelledby="transaction-form-title">
+            <div class="form-container">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2 id="transaction-form-title"><i class="ri-add-circle-line" aria-hidden="true"></i> Nova Transação</h2>
+                        <p class="section-subtitle">Registre uma nova receita ou despesa</p>
+                    </div>
+                </div>
+                <form id="transaction-form" class="transaction-form" aria-label="Formulário de Nova Transação">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="description">Descrição</label>
+                            <input type="text" id="description" placeholder="Ex: Mercado, Salário, Combustível" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="amount">Valor (R$)</label>
+                            <input type="number" id="amount" placeholder="0,00" min="0.01" step="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Tipo de Transação</label>
+                            <div class="radio-group" role="radiogroup" aria-labelledby="transaction-type-label">
+                                <label class="radio-option">
+                                    <input type="radio" name="type" value="receita" checked aria-label="Receita">
+                                    <span class="radio-custom income" aria-hidden="true"></span>
+                                    <span>Receita</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="type" value="despesa" aria-label="Despesa">
+                                    <span class="radio-custom expense" aria-hidden="true"></span>
+                                    <span>Despesa</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="category">Categoria</label>
+                            <select id="category" required aria-label="Categoria da transação">
+                                <option value="">Selecione uma categoria</option>
+                                <option value="Alimentação">🍽️ Alimentação</option>
+                                <option value="Transporte">🚗 Transporte</option>
+                                <option value="Lazer">🎮 Lazer</option>
+                                <option value="Trabalho">💼 Trabalho</option>
+                                <option value="Saúde">🏥 Saúde</option>
+                                <option value="Educação">📚 Educação</option>
+                                <option value="Moradia">🏠 Moradia</option>
+                                <option value="Compras">🛒 Compras</option>
+                                <option value="Investimentos">📈 Investimentos</option>
+                                <option value="Outros">📋 Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="bank-select">Banco/Conta</label>
+                            <select id="bank-select" aria-label="Banco ou conta da transação">
+                                <option value="">💵 Dinheiro/Nenhum</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="date">Data</label>
+                            <input type="date" id="date" required aria-label="Data da transação">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" aria-label="Adicionar Transação">
+                        <i class="ri-add-line" aria-hidden="true"></i>
+                        Adicionar Transação
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Transactions List -->
+        <section class="transactions-section" aria-labelledby="transactions-section-title">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2 id="transactions-section-title"><i class="ri-history-line" aria-hidden="true"></i> Histórico de Transações</h2>
+                    <p class="section-subtitle">Todas as suas movimentações financeiras</p>
+                </div>
+            </div>
+            <div class="transactions-container">
+                <ul id="transactions-list" class="transactions-list" aria-label="Lista de transações">
+                    <li class="no-transactions">
+                        <div class="empty-state">
+                            <i class="ri-file-list-line" aria-hidden="true"></i>
+                            <p>Nenhuma transação registrada</p>
+                            <small>Adicione sua primeira transação acima</small>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
     </main>
-    <!-- Tab Bar -->
-    <nav class="fixed bottom-0 w-full bg-gray-800 shadow-lg z-50">
-      <div class="grid grid-cols-4 h-14">
-        <a
-          href="#"
-          class="flex flex-col items-center justify-center text-primary"
-        >
-          <div class="w-6 h-6 flex items-center justify-center">
-            <i class="ri-home-line ri-lg"></i>
-          </div>
-          <span class="text-xs mt-1">Início</span>
-        </a>
-        <a
-          href="#"
-          class="flex flex-col items-center justify-center text-gray-400"
-        >
-          <div class="w-6 h-6 flex items-center justify-center">
-            <i class="ri-bar-chart-line ri-lg"></i>
-          </div>
-          <span class="text-xs mt-1">Relatórios</span>
-        </a>
-        <a
-          href="#"
-          class="flex flex-col items-center justify-center text-gray-400"
-        >
-          <div class="w-6 h-6 flex items-center justify-center">
-            <i class="ri-calendar-line ri-lg"></i>
-          </div>
-          <span class="text-xs mt-1">Calendário</span>
-        </a>
-        <a
-          href="#"
-          class="flex flex-col items-center justify-center text-gray-400"
-        >
-          <div class="w-6 h-6 flex items-center justify-center">
-            <i class="ri-settings-line ri-lg"></i>
-          </div>
-          <span class="text-xs mt-1">Ajustes</span>
-        </a>
-      </div>
-    </nav>
-    <!-- Modal de Confirmação -->
-    <div
-      id="delete-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div class="bg-gray-800 rounded-lg p-6 w-5/6 max-w-sm">
-        <h3 class="text-lg font-medium mb-4">Confirmar exclusão</h3>
-        <p class="mb-6">Tem certeza que deseja excluir esta transação?</p>
-        <div class="flex justify-end space-x-3">
-          <button
-            id="cancel-delete"
-            class="px-4 py-2 bg-gray-700 text-white !rounded-button"
-          >
-            Cancelar
-          </button>
-          <button
-            id="confirm-delete"
-            class="px-4 py-2 bg-red-600 text-white !rounded-button"
-          >
-            Excluir
-          </button>
+
+    <!-- Add/Edit Bank Modal -->
+    <div id="bank-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Adicionar Banco</h3>
+                <button id="close-modal" class="close-btn" aria-label="Fechar modal">
+                    <i class="ri-close-line" aria-hidden="true"></i>
+                </button>
+            </div>
+            <form id="bank-form" class="bank-form" aria-label="Formulário de Banco">
+                <div class="input-group">
+                    <label for="bank-name">Nome do Banco</label>
+                    <input type="text" id="bank-name" placeholder="Ex: Nubank, Itaú, Bradesco, Caixa" required>
+                </div>
+                <div class="input-group">
+                    <label for="initial-balance">Saldo Inicial (R$)</label>
+                    <input type="number" id="initial-balance" placeholder="0,00" step="0.01" value="0">
+                    <small class="input-help">Valor atual na conta (opcional)</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-bank" class="btn-secondary" aria-label="Cancelar e fechar">Cancelar</button>
+                    <button type="submit" class="btn-primary" aria-label="Salvar banco">Salvar Banco</button>
+                </div>
+            </form>
         </div>
-      </div>
     </div>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const users = {
-          erick: "Gaby128",
-          gabriela:"gaby128",
-          admin: "admin",
-        };
-        let currentUser = null;
-        // Check if user is already logged in
-        const storedUser = localStorage.getItem("currentUser");
-        if (storedUser) {
-          currentUser = storedUser;
-          document.getElementById("login-page").style.display = "none";
-          document.getElementById("username-display").textContent = currentUser;
-        } else {
-          document.getElementById("login-page").style.display = "flex";
-        }
-        // Login form handler
-        document
-          .getElementById("login-form")
-          .addEventListener("submit", function (e) {
-            e.preventDefault();
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
 
-            if (users[username] && users[username] === password) {
-              currentUser = username;
-              localStorage.setItem("currentUser", username);
-              document.getElementById("login-page").style.display = "none";
-              document.getElementById("username-display").textContent = username;
-              renderTransactions();
-              updateSummary();
-              updateChart();
-            } else {
-              const errorDiv = document.getElementById("login-error");
-              errorDiv.textContent = "Usuário ou senha incorretos";
-              errorDiv.classList.remove("hidden");
-            }
-          });
-        // Logout handler
-        document.getElementById("logout-btn").addEventListener("click", function () {
-          currentUser = null;
-          localStorage.removeItem("currentUser");
-          document.getElementById("login-page").style.display = "flex";
-          document.getElementById("username-display").textContent = "";
-          transactions = [];
-          renderTransactions();
-          updateSummary();
-          updateChart();
-        });
-        // Inicializar data atual no formulário
-        document.getElementById("date").valueAsDate = new Date();
-        // Seleção de tipo (receita/despesa)
-        const typeRadios = document.querySelectorAll('input[name="type"]');
-        typeRadios.forEach((radio) => {
-          radio.addEventListener("change", function () {
-            // Remover seleção de todos
-            document.querySelectorAll(".type-radio-dot").forEach((dot) => {
-              dot.classList.add("hidden");
-            });
-            // Adicionar seleção ao atual
-            if (this.checked) {
-              this.parentElement
-                .querySelector(".type-radio-dot")
-                .classList.remove("hidden");
-            }
-          });
-          // Inicializar estado
-          if (radio.checked) {
-            radio.parentElement
-              .querySelector(".type-radio-dot")
-              .classList.remove("hidden");
-          }
-        });
-        // Carregar transações do localStorage
-        let transactions = loadTransactions();
-        // Renderizar transações
-        renderTransactions();
-        updateSummary();
-        updateChart();
-        // Adicionar nova transação
-        document
-          .getElementById("transaction-form")
-          .addEventListener("submit", function (e) {
-            e.preventDefault();
-            const description = document.getElementById("description").value;
-            const amount = parseFloat(document.getElementById("amount").value);
-            const type = document.querySelector('input[name="type"]:checked').value;
-            const category = document.getElementById("category").value;
-            const date = document.getElementById("date").value;
-            const transaction = {
-              id: Date.now(),
-              description,
-              amount,
-              type,
-              category,
-              date,
-            };
-            transactions.push(transaction);
-            saveTransactions();
-            // Limpar formulário
-            this.reset();
-            document.getElementById("date").valueAsDate = new Date();
-            document.querySelector('input[name="type"][value="receita"]').checked =
-              true;
-            document.querySelectorAll(".type-radio-dot").forEach((dot) => {
-              dot.classList.add("hidden");
-            });
-            document
-              .querySelector('input[value="receita"]')
-              .parentElement.querySelector(".type-radio-dot")
-              .classList.remove("hidden");
-            renderTransactions();
-            updateSummary();
-            updateChart();
-          });
-        // Funções
-        function renderTransactions() {
-          const list = document.getElementById("transactions-list");
-          if (transactions.length === 0) {
-            list.innerHTML =
-              '<li class="p-4 text-center text-gray-500">Nenhuma transação registrada</li>';
-            return;
-          }
-          // Ordenar transações por data (mais recente primeiro)
-          const sortedTransactions = [...transactions].sort((a, b) => {
-            return new Date(b.date) - new Date(a.date);
-          });
-          list.innerHTML = "";
-          sortedTransactions.forEach((transaction) => {
-            const formattedAmount = formatCurrency(transaction.amount);
-            const formattedDate = formatDate(transaction.date);
-            const li = document.createElement("li");
-            li.className = "p-4 flex items-center justify-between";
-            const isIncome = transaction.type === "receita";
-            const amountColor = isIncome ? "text-green-500" : "text-red-500";
-            const icon = isIncome
-              ? "ri-arrow-up-circle-line"
-              : "ri-arrow-down-circle-line";
-            li.innerHTML = `
-      <div class="flex items-center">
-      <div class="w-8 h-8 flex items-center justify-center ${isIncome ? "text-green-500" : "text-red-500"}">
-      <i class="${icon} ri-lg"></i>
-      </div>
-      <div class="ml-3">
-      <p class="font-medium">${transaction.description}</p>
-      <div class="flex text-xs text-gray-400">
-      <span>${transaction.category}</span>
-      <span class="mx-1">•</span>
-      <span>${formattedDate}</span>
-      </div>
-      </div>
-      </div>
-      <div class="flex items-center">
-      <span class="font-medium ${amountColor} mr-3">${formattedAmount}</span>
-      <button class="delete-btn w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 cursor-pointer" data-id="${transaction.id}">
-      <i class="ri-delete-bin-line"></i>
-      </button>
-      </div>
-      `;
-            list.appendChild(li);
-          });
-          // Adicionar event listeners aos botões de exclusão
-          document.querySelectorAll(".delete-btn").forEach((btn) => {
-            btn.addEventListener("click", function () {
-              const id = parseInt(this.getAttribute("data-id"));
-              showDeleteConfirmation(id);
-            });
-          });
-        }
-        function updateSummary() {
-          const totalIncome = transactions
-            .filter((t) => t.type === "receita")
-            .reduce((sum, t) => sum + t.amount, 0);
-          const totalExpense = transactions
-            .filter((t) => t.type === "despesa")
-            .reduce((sum, t) => sum + t.amount, 0);
-          const balance = totalIncome - totalExpense;
-          document.getElementById("total-receitas").textContent =
-            formatCurrency(totalIncome);
-          document.getElementById("total-despesas").textContent =
-            formatCurrency(totalExpense);
-          const balanceElement = document.getElementById("saldo-total");
-          balanceElement.textContent = formatCurrency(balance);
-          if (balance > 0) {
-            balanceElement.className = "font-semibold text-green-500";
-          } else if (balance < 0) {
-            balanceElement.className = "font-semibold text-red-500";
-          } else {
-            balanceElement.className = "font-semibold text-gray-400";
-          }
-        }
-        function updateChart() {
-          // Get current month transactions
-          const now = new Date();
-          const currentMonth = now.getMonth();
-          const currentYear = now.getFullYear();
-          // Filter and group transactions by category for current month
-          const categoryData = {};
-          transactions.forEach((t) => {
-            const transactionDate = new Date(t.date);
-            if (
-              t.type === "despesa" &&
-              transactionDate.getMonth() === currentMonth &&
-              transactionDate.getFullYear() === currentYear
-            ) {
-              if (!categoryData[t.category]) {
-                categoryData[t.category] = 0;
-              }
-              categoryData[t.category] += t.amount;
-            }
-          });
-          // Ordenar categorias por valor (do maior para o menor)
-          const sortedCategories = Object.entries(categoryData)
-            .sort(([, a], [, b]) => b - a)
-            .reduce((acc, [key, value]) => {
-              acc[key] = value;
-              return acc;
-            }, {});
-          const categories = Object.keys(sortedCategories);
-          const values = Object.values(sortedCategories);
-          // Renderizar gráfico
-          const chartDom = document.getElementById("chart");
-          const myChart = echarts.init(chartDom, "dark");
-          const option = {
-            title: {
-              text: `Despesas - ${new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date())}`,
-              left: "center",
-              top: 0,
-              textStyle: {
-                color: "#e0e0e0",
-                fontSize: 14,
-              },
-            },
-            tooltip: {
-              trigger: "axis",
-              axisPointer: {
-                type: "shadow",
-              },
-              formatter: function (params) {
-                return `${params[0].name}: R$ ${params[0].value.toFixed(2)}`;
-              },
-            },
-            grid: {
-              left: "3%",
-              right: "4%",
-              bottom: "3%",
-              top: "40px",
-              containLabel: true,
-            },
-            xAxis: {
-              type: "value",
-              axisLabel: {
-                formatter: function (value) {
-                  return `R$ ${value.toFixed(0)}`;
-                },
-                color: "#9ca3af",
-              },
-              axisLine: {
-                show: true,
-                lineStyle: {
-                  color: "#4b5563",
-                },
-              },
-              splitLine: {
-                lineStyle: {
-                  color: "#374151",
-                },
-              },
-            },
-            yAxis: {
-              type: "category",
-              data: categories.length > 0 ? categories : ["Sem dados"],
-              axisLabel: {
-                color: "#9ca3af",
-              },
-              axisLine: {
-                show: true,
-                lineStyle: {
-                  color: "#4b5563",
-                },
-              },
-            },
-            series: [
-              {
-                name: "Despesas",
-                type: "bar",
-                data: values.length > 0 ? values : [0],
-                itemStyle: {
-                  color: "#6366F1",
-                  borderRadius: [0, 4, 4, 0],
-                },
-                barWidth: "60%",
-                label: {
-                  show: true,
-                  position: "right",
-                  formatter: function (params) {
-                    return `R$ ${params.value.toFixed(2)}`;
-                  },
-                  color: "#9ca3af",
-                },
-              },
-            ],
-          };
-          myChart.setOption(option);
-          // Ajustar tamanho ao redimensionar
-          window.addEventListener("resize", function () {
-            myChart.resize();
-          });
-        }
-        function saveTransactions() {
-          if (currentUser) {
-            localStorage.setItem(
-              `transactions_${currentUser}`,
-              JSON.stringify(transactions),
-            );
-          }
-        }
-        function loadTransactions() {
-          if (currentUser) {
-            return (
-              JSON.parse(localStorage.getItem(`transactions_${currentUser}`)) || []
-            );
-          }
-          return [];
-        }
-        function formatCurrency(value) {
-          return new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(value);
-        }
-        function formatDate(dateString) {
-          const date = new Date(dateString);
-          return date.toLocaleDateString("pt-BR");
-        }
-        // Modal de confirmação de exclusão
-        let transactionToDelete = null;
-        function showDeleteConfirmation(id) {
-          transactionToDelete = id;
-          document.getElementById("delete-modal").classList.remove("hidden");
-        }
-        document
-          .getElementById("cancel-delete")
-          .addEventListener("click", function () {
-            document.getElementById("delete-modal").classList.add("hidden");
-            transactionToDelete = null;
-          });
-        document
-          .getElementById("confirm-delete")
-          .addEventListener("click", function () {
-            if (transactionToDelete !== null) {
-              transactions = transactions.filter((t) => t.id !== transactionToDelete);
-              saveTransactions();
-              renderTransactions();
-              updateSummary();
-              updateChart();
-              document.getElementById("delete-modal").classList.add("hidden");
-              transactionToDelete = null;
-            }
-          });
-      });
-    </script>
-  </body>
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="delete-modal-title">⚠️ Confirmar Exclusão</h3>
+            </div>
+            <p class="modal-text">Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.</p>
+            <div class="modal-actions">
+                <button id="cancel-delete" class="btn-secondary" aria-label="Cancelar exclusão">Cancelar</button>
+                <button id="confirm-delete" class="btn-danger" aria-label="Confirmar exclusão">
+                    <i class="ri-delete-bin-line" aria-hidden="true"></i>
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
-
