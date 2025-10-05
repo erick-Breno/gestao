@@ -7,20 +7,20 @@
 
 :root {
   /* Color Palette: Green, Pink, Red */
-  --primary-green: #22c55e;
-  --secondary-green: #16a34a;
+  --primary-green: #0c7031;
+  --secondary-green: #09461f;
   --light-green: #dcfce7;
-  --dark-green: #15803d;
+  --dark-green: #094d22;
 
-  --primary-pink: #ec4899;
+  --primary-pink: #da207d;
   --secondary-pink: #db2777;
   --light-pink: #fce7f3;
   --dark-pink: #be185d;
 
-  --primary-red: #ef4444;
-  --secondary-red: #dc2626;
-  --light-red: #fee2e2;
-  --dark-red: #b91c1c;
+  --primary-red: #e42727;
+  --secondary-red: #9b1010;
+  --light-red: #f3e1e1;
+  --dark-red: #4b0b0b;
 
   /* Neutral Colors */
   --bg-primary: #1a0d1a; /* Dark pink base */
@@ -1055,6 +1055,7 @@ body {
 
   .bank-tabs {
     padding: 0 var(--spacing-md);
+    
   }
 
   .bank-tab {
