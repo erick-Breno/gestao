@@ -1064,7 +1064,9 @@ body {
     flex-shrink: 0;
     background-color: var(--dark-pink);
     color: white;
-    border-radius: 80px; 
+    border-radius: 80px;
+    min-height: 50px;
+    min-width: 150px;
   }
 
   /* Better mobile chart responsiveness */
