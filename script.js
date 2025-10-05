@@ -1,19 +1,20 @@
 class BankBalanceTracker {
   constructor() {
-    this.users = {
-      erick: "Gaby128",
-      gabriela: "gaby128",
-      admin: "admin",
-    }
+    this.supabase = window.createSupabaseClient()
 
     this.currentUser = null
+    this.currentUserId = null
     this.banks = []
     this.transactions = []
+    this.creditCards = []
+    this.installments = []
     this.currentBankFilter = "all"
+    this.currentView = "home"
     this.chart = null
     this.echarts = window.echarts
     this.transactionToDelete = null
     this.bankToEdit = null
+    this.creditCardToEdit = null
 
     this.init()
   }
@@ -22,20 +23,70 @@ class BankBalanceTracker {
     this.checkLoginStatus()
     this.setupEventListeners()
     this.setCurrentDate()
+    this.initMobileNavigation()
+  }
+
+  initMobileNavigation() {
+    document.querySelectorAll(".nav-item").forEach((item) => {
+      item.addEventListener("click", (e) => {
+        const section = e.currentTarget.getAttribute("data-section")
+        if (section) {
+          this.switchView(section)
+        }
+      })
+    })
+    this.switchView("home-section")
+  }
+
+  switchView(sectionId) {
+    this.currentView = sectionId
+
+    // Update active nav item
+    document.querySelectorAll(".nav-item").forEach((item) => {
+      item.classList.remove("active")
+      if (item.getAttribute("data-section") === sectionId) {
+        item.classList.add("active")
+      }
+    })
+
+    // Hide all sections
+    document.querySelectorAll(".nav-section").forEach((section) => {
+      section.classList.remove("active")
+    })
+
+    // Show current view
+    const currentSection = document.getElementById(sectionId)
+    if (currentSection) {
+      currentSection.classList.add("active")
+    }
+
+    // Update chart if switching to charts view
+    if (sectionId === "charts-section") {
+      setTimeout(() => this.updateChart(), 100)
+    }
   }
 
   /**
-   * Checks if a user is currently logged in from localStorage.
-   * Updates UI accordingly.
+   * Checks if a user is currently logged in from Supabase session.
    */
-  checkLoginStatus() {
-    const storedUser = localStorage.getItem("currentUser")
-    if (storedUser) {
-      this.currentUser = storedUser
-      this.hideLoginPage()
-      this.loadUserData()
-      this.updateUI()
-    } else {
+  async checkLoginStatus() {
+    try {
+      const {
+        data: { session },
+      } = await this.supabase.auth.getSession()
+
+      if (session?.user) {
+        this.currentUserId = session.user.id
+        this.currentUser = session.user.email
+
+        this.hideLoginPage()
+        await this.loadUserData()
+        this.updateUI()
+      } else {
+        this.showLoginPage()
+      }
+    } catch (error) {
+      console.error("Erro ao verificar login:", error)
       this.showLoginPage()
     }
   }
@@ -44,35 +95,35 @@ class BankBalanceTracker {
    * Sets up all event listeners for the application.
    */
   setupEventListeners() {
-    // Login form submission
+    // Login form
     document.getElementById("login-form").addEventListener("submit", (e) => {
       e.preventDefault()
       this.handleLogin()
     })
 
-    // Logout button click
+    // Logout button
     document.getElementById("logout-btn").addEventListener("click", () => {
       this.handleLogout()
     })
 
-    // Add bank button click
+    // Add bank button
     document.getElementById("add-bank-btn").addEventListener("click", () => {
       this.showBankModal()
     })
 
-    // Bank form submission (add/edit bank)
+    // Bank form
     document.getElementById("bank-form").addEventListener("submit", (e) => {
       e.preventDefault()
       this.handleBankSubmit()
     })
 
-    // Transaction form submission
+    // Transaction form
     document.getElementById("transaction-form").addEventListener("submit", (e) => {
       e.preventDefault()
       this.handleTransactionSubmit()
     })
 
-    // Close bank modal buttons
+    // Close bank modal
     document.getElementById("close-modal").addEventListener("click", () => {
       this.hideBankModal()
     })
@@ -81,7 +132,7 @@ class BankBalanceTracker {
       this.hideBankModal()
     })
 
-    // Delete confirmation modal buttons
+    // Delete confirmation modal
     document.getElementById("cancel-delete").addEventListener("click", () => {
       this.hideDeleteModal()
     })
@@ -90,7 +141,7 @@ class BankBalanceTracker {
       this.confirmDelete()
     })
 
-    // Chart filter changes
+    // Chart filters
     document.getElementById("chart-bank-filter").addEventListener("change", (e) => {
       this.currentBankFilter = e.target.value
       this.updateChart()
@@ -112,97 +163,235 @@ class BankBalanceTracker {
         this.hideDeleteModal()
       }
     })
+
+    document.addEventListener("click", (e) => {
+      if (e.target.classList.contains("bank-tab")) {
+        const filter = e.target.getAttribute("data-filter")
+        if (filter) {
+          this.setCurrentBankFilter(filter)
+        }
+      }
+    })
+
+    document.getElementById("payment-method").addEventListener("change", (e) => {
+      this.handlePaymentMethodChange(e.target.value)
+    })
+
+    document.getElementById("card-form").addEventListener("submit", (e) => {
+      e.preventDefault()
+      this.handleCreditCardSubmit()
+    })
+
+    document.getElementById("close-card-modal").addEventListener("click", () => {
+      this.hideCreditCardModal()
+    })
+
+    document.getElementById("cancel-card").addEventListener("click", () => {
+      this.hideCreditCardModal()
+    })
+
+    document.getElementById("add-card-btn").addEventListener("click", () => {
+      this.showCreditCardModal()
+    })
+
+    // Close modals with ESC
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.hideBankModal()
+        this.hideDeleteModal()
+        this.hideCreditCardModal()
+      }
+    })
   }
 
   /**
-   * Handles the user login process.
+   * Handles user login via Supabase Auth.
    */
-  handleLogin() {
-    const usernameInput = document.getElementById("username")
+  async handleLogin() {
+    const emailInput = document.getElementById("email")
     const passwordInput = document.getElementById("password")
     const errorDiv = document.getElementById("login-error")
 
-    const username = usernameInput.value.trim()
+    const email = emailInput.value.trim()
     const password = passwordInput.value
 
-    if (!username || !password) {
-      errorDiv.textContent = "Por favor, preencha todos os campos."
-      errorDiv.classList.remove("hidden")
+    if (!email || !password) {
+      this.showError("Por favor, preencha todos os campos.", errorDiv)
       return
     }
 
-    if (this.users[username] && this.users[username] === password) {
-      this.currentUser = username
-      localStorage.setItem("currentUser", username)
-      this.hideLoginPage()
-      this.loadUserData()
-      this.updateUI()
-      errorDiv.classList.add("hidden") // Hide error on successful login
+    try {
+      // Try to sign in with email and password
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      })
 
-      // Clear login form
-      usernameInput.value = ""
+      if (error) {
+        throw new Error("Email ou senha incorretos")
+      }
+
+      this.currentUserId = data.user.id
+      this.currentUser = data.user.email
+
+      this.hideLoginPage()
+      await this.loadUserData()
+      this.updateUI()
+
+      errorDiv.classList.add("hidden")
+      emailInput.value = ""
       passwordInput.value = ""
-    } else {
-      errorDiv.textContent = "Usuário ou senha incorretos. Tente novamente."
-      errorDiv.classList.remove("hidden")
-      passwordInput.value = "" // Clear password field for security
+
+      console.log(`✅ Login realizado: ${email}`)
+    } catch (error) {
+      console.error("Erro no login:", error)
+      this.showError("Email ou senha incorretos!", errorDiv)
+      passwordInput.value = ""
       passwordInput.focus()
     }
   }
 
   /**
-   * Handles the user logout process.
+   * Handles user logout.
    */
-  handleLogout() {
+  async handleLogout() {
+    try {
+      await this.supabase.auth.signOut()
+    } catch (error) {
+      console.error("Erro no logout:", error)
+    }
+
     this.currentUser = null
-    localStorage.removeItem("currentUser")
-    this.banks = [] // Clear data on logout
-    this.transactions = [] // Clear data on logout
+    this.currentUserId = null
+    this.banks = []
+    this.transactions = []
+    this.creditCards = []
+    this.installments = []
+
     this.showLoginPage()
-    this.updateUI() // Update UI to reflect logout state
+    this.updateUI()
+
+    console.log("🚪 Logout realizado")
   }
 
-  /**
-   * Shows the login page and hides the main content/navbar.
-   */
+  showError(message, errorDiv) {
+    if (errorDiv) {
+      errorDiv.textContent = message
+      errorDiv.classList.remove("hidden")
+    }
+  }
+
+  hideError(errorDiv) {
+    if (errorDiv) {
+      errorDiv.classList.add("hidden")
+    }
+  }
+
   showLoginPage() {
     document.getElementById("login-page").classList.remove("hidden")
     document.querySelector(".navbar").classList.add("hidden")
     document.querySelector("main").classList.add("hidden")
+    document.querySelector(".mobile-nav").classList.add("hidden")
   }
 
-  /**
-   * Hides the login page and shows the main content/navbar.
-   */
   hideLoginPage() {
     document.getElementById("login-page").classList.add("hidden")
     document.querySelector(".navbar").classList.remove("hidden")
     document.querySelector("main").classList.remove("hidden")
+    document.querySelector(".mobile-nav").classList.remove("hidden")
   }
 
   /**
-   * Loads user-specific data (banks and transactions) from localStorage.
+   * Loads all user data from Supabase.
    */
-  loadUserData() {
-    if (this.currentUser) {
-      this.banks = JSON.parse(localStorage.getItem(`banks_${this.currentUser}`)) || []
-      this.transactions = JSON.parse(localStorage.getItem(`transactions_${this.currentUser}`)) || []
+  async loadUserData() {
+    if (!this.currentUserId) return
+
+    try {
+      // Load banks
+      const { data: banks, error: banksError } = await this.supabase
+        .from("banks")
+        .select("*")
+        .eq("user_id", this.currentUserId)
+        .order("created_at", { ascending: true })
+
+      if (banksError) throw banksError
+
+      this.banks = banks.map((bank) => ({
+        ...bank,
+        initialBalance: Number.parseFloat(bank.initial_balance),
+      }))
+
+      // Load transactions
+      const { data: transactions, error: transactionsError } = await this.supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", this.currentUserId)
+        .order("created_at", { ascending: false })
+
+      if (transactionsError) throw transactionsError
+
+      this.transactions = transactions.map((transaction) => ({
+        ...transaction,
+        bankId: transaction.bank_id,
+        amount: Number.parseFloat(transaction.amount),
+        creditCardId: transaction.credit_card_id,
+        installments: transaction.installments,
+        isCreditCardTransaction: transaction.is_credit_card_transaction,
+      }))
+
+      // Load credit cards
+      const { data: creditCards, error: cardsError } = await this.supabase
+        .from("credit_cards")
+        .select("*")
+        .eq("user_id", this.currentUserId)
+        .order("created_at", { ascending: true })
+
+      if (cardsError) throw cardsError
+
+      this.creditCards = creditCards.map((card) => ({
+        ...card,
+        creditLimit: Number.parseFloat(card.credit_limit),
+        currentBalance: Number.parseFloat(card.current_balance),
+        closingDay: card.closing_day,
+        dueDay: card.due_day,
+      }))
+
+      // Load installments
+      const { data: installments, error: installmentsError } = await this.supabase
+        .from("installments")
+        .select("*")
+        .eq("user_id", this.currentUserId)
+        .order("due_date", { ascending: true })
+
+      if (installmentsError) throw installmentsError
+
+      this.installments = installments.map((installment) => ({
+        ...installment,
+        amount: Number.parseFloat(installment.amount),
+        installmentNumber: installment.installment_number,
+        totalInstallments: installment.total_installments,
+        dueDate: installment.due_date,
+        isPaid: installment.is_paid,
+        creditCardId: installment.credit_card_id,
+        transactionId: installment.transaction_id,
+      }))
+
+      console.log(
+        `📊 Dados carregados: ${this.banks.length} bancos, ${this.transactions.length} transações, ${this.creditCards.length} cartões`,
+      )
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error)
+      alert("Erro ao carregar dados do servidor. Tente novamente.")
+      this.banks = []
+      this.transactions = []
+      this.creditCards = []
+      this.installments = []
     }
   }
 
   /**
-   * Saves user-specific data (banks and transactions) to localStorage.
-   */
-  saveUserData() {
-    if (this.currentUser) {
-      localStorage.setItem(`banks_${this.currentUser}`, JSON.stringify(this.banks))
-      localStorage.setItem(`transactions_${this.currentUser}`, JSON.stringify(this.transactions))
-    }
-  }
-
-  /**
-   * Shows the bank modal, pre-filling data if editing an existing bank.
-   * @param {object} [bankData=null] - The bank object to edit, if any.
+   * Shows bank modal for add/edit.
    */
   showBankModal(bankData = null) {
     const modal = document.getElementById("bank-modal")
@@ -226,9 +415,6 @@ class BankBalanceTracker {
     nameInput.focus()
   }
 
-  /**
-   * Hides the bank modal and resets its form.
-   */
   hideBankModal() {
     document.getElementById("bank-modal").classList.add("hidden")
     document.getElementById("bank-form").reset()
@@ -236,9 +422,9 @@ class BankBalanceTracker {
   }
 
   /**
-   * Handles the submission of the add/edit bank form.
+   * Handles bank form submission.
    */
-  handleBankSubmit() {
+  async handleBankSubmit() {
     const name = document.getElementById("bank-name").value.trim()
     const initialBalance = Number.parseFloat(document.getElementById("initial-balance").value) || 0
 
@@ -247,33 +433,66 @@ class BankBalanceTracker {
       return
     }
 
-    if (this.bankToEdit) {
-      // Edit existing bank
-      const bankIndex = this.banks.findIndex((b) => b.id === this.bankToEdit)
-      if (bankIndex !== -1) {
-        this.banks[bankIndex].name = name
-        this.banks[bankIndex].initialBalance = initialBalance
-      }
-    } else {
-      // Add new bank
-      const bank = {
-        id: Date.now(), // Unique ID for the bank
-        name: name,
-        initialBalance: initialBalance,
-        createdAt: new Date().toISOString(),
-      }
-      this.banks.push(bank)
+    if (!this.currentUserId) {
+      alert("Erro: usuário não autenticado.")
+      return
     }
 
-    this.saveUserData()
-    this.updateUI()
-    this.hideBankModal()
+    try {
+      if (this.bankToEdit) {
+        // Update existing bank
+        const { error } = await this.supabase
+          .from("banks")
+          .update({
+            name: name,
+            initial_balance: initialBalance,
+          })
+          .eq("id", this.bankToEdit)
+          .eq("user_id", this.currentUserId)
+
+        if (error) throw error
+
+        // Update local data
+        const bankIndex = this.banks.findIndex((b) => b.id === this.bankToEdit)
+        if (bankIndex !== -1) {
+          this.banks[bankIndex].name = name
+          this.banks[bankIndex].initialBalance = initialBalance
+        }
+
+        console.log(`✏️ Banco editado: ${name}`)
+      } else {
+        // Create new bank
+        const { data, error } = await this.supabase
+          .from("banks")
+          .insert({
+            user_id: this.currentUserId,
+            name: name,
+            initial_balance: initialBalance,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+
+        // Add to local data
+        this.banks.push({
+          id: data.id,
+          name: name,
+          initialBalance: initialBalance,
+          createdAt: data.created_at,
+        })
+
+        console.log(`➕ Banco adicionado: ${name}`)
+      }
+
+      this.updateUI()
+      this.hideBankModal()
+    } catch (error) {
+      console.error("Erro ao salvar banco:", error)
+      alert("Erro ao salvar banco. Tente novamente.")
+    }
   }
 
-  /**
-   * Initiates the editing of a bank.
-   * @param {number} bankId - The ID of the bank to edit.
-   */
   editBank(bankId) {
     const bank = this.banks.find((b) => b.id === bankId)
     if (bank) {
@@ -281,100 +500,254 @@ class BankBalanceTracker {
     }
   }
 
-  /**
-   * Deletes a bank and its associated transactions.
-   * @param {number} bankId - The ID of the bank to delete.
-   */
-  deleteBank(bankId) {
-    if (confirm("Tem certeza que deseja excluir este banco e todas as suas transações?")) {
-      this.banks = this.banks.filter((b) => b.id !== bankId)
-      this.transactions = this.transactions.filter((t) => t.bankId !== bankId) // Also remove associated transactions
-      this.saveUserData()
-      this.updateUI()
+  async deleteBank(bankId) {
+    const bank = this.banks.find((b) => b.id === bankId)
+    if (!bank) return
+
+    this.transactionToDelete = { type: "bank", id: bankId, name: bank.name }
+    const modal = document.getElementById("delete-modal")
+    const modalText = modal?.querySelector(".modal-text")
+
+    if (modalText) {
+      modalText.textContent = `Tem certeza que deseja excluir o banco "${bank.name}" e todas as suas transações? Esta ação não pode ser desfeita.`
+    }
+
+    if (modal) {
+      modal.classList.remove("hidden")
     }
   }
 
   /**
-   * Handles the submission of the new transaction form.
+   * Handles transaction form submission.
    */
-  handleTransactionSubmit() {
+  async handleTransactionSubmit() {
     const description = document.getElementById("description").value.trim()
     const amount = Number.parseFloat(document.getElementById("amount").value)
     const type = document.querySelector('input[name="type"]:checked').value
     const category = document.getElementById("category").value
-    const bankId = document.getElementById("bank-select").value // It's a string, convert to number or null
+    const paymentMethod = document.getElementById("payment-method").value
+    const bankId = paymentMethod === "bank" ? document.getElementById("bank-select").value || null : null
+    const creditCardId = paymentMethod === "credit" ? document.getElementById("credit-card-select").value || null : null
+    const installments =
+      paymentMethod === "credit" ? Number.parseInt(document.getElementById("installments").value) || 1 : 1
     const date = document.getElementById("date").value
 
     if (!description || isNaN(amount) || amount <= 0 || !category || !date) {
-      alert("Por favor, preencha todos os campos da transação corretamente.")
+      alert("Por favor, preencha todos os campos corretamente.")
       return
     }
 
-    const transaction = {
-      id: Date.now(), // Unique ID for the transaction
-      description,
-      amount,
-      type,
-      category,
-      bankId: bankId ? Number.parseInt(bankId) : null, // Convert to number or keep null
-      date,
-      createdAt: new Date().toISOString(),
+    if (paymentMethod === "credit" && !creditCardId) {
+      alert("Por favor, selecione um cartão de crédito.")
+      return
     }
 
-    this.transactions.push(transaction)
-    this.saveUserData()
-    this.resetTransactionForm()
-    this.updateUI()
+    if (!this.currentUserId) {
+      alert("Erro: usuário não autenticado.")
+      return
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .from("transactions")
+        .insert({
+          user_id: this.currentUserId,
+          bank_id: bankId,
+          credit_card_id: creditCardId,
+          description: description,
+          amount: amount,
+          type: type,
+          category: category,
+          date: date,
+          installments: installments,
+          is_credit_card_transaction: paymentMethod === "credit",
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Handle credit card installments
+      if (paymentMethod === "credit" && installments > 1) {
+        await this.createInstallments(data.id, creditCardId, amount / installments, installments, date)
+      }
+
+      // Update credit card balance
+      if (paymentMethod === "credit" && type === "despesa") {
+        await this.updateCreditCardBalance(creditCardId, amount)
+      }
+
+      // Add to local data
+      this.transactions.unshift({
+        id: data.id,
+        description,
+        amount,
+        type,
+        category,
+        bankId: bankId,
+        creditCardId: creditCardId,
+        date,
+        installments,
+        isCreditCardTransaction: paymentMethod === "credit",
+        createdAt: data.created_at,
+      })
+
+      this.resetTransactionForm()
+      this.updateUI()
+
+      console.log(`💰 Transação adicionada: ${description} - ${this.formatCurrency(amount)}`)
+    } catch (error) {
+      console.error("Erro ao salvar transação:", error)
+      alert("Erro ao salvar transação. Tente novamente.")
+    }
   }
 
-  /**
-   * Shows the delete confirmation modal for a transaction.
-   * @param {number} transactionId - The ID of the transaction to delete.
-   */
+  async createInstallments(transactionId, creditCardId, installmentAmount, totalInstallments, startDate) {
+    const installmentsData = []
+    const baseDate = new Date(startDate)
+
+    for (let i = 1; i <= totalInstallments; i++) {
+      const dueDate = new Date(baseDate)
+      dueDate.setMonth(dueDate.getMonth() + i - 1)
+
+      installmentsData.push({
+        user_id: this.currentUserId,
+        transaction_id: transactionId,
+        credit_card_id: creditCardId,
+        installment_number: i,
+        total_installments: totalInstallments,
+        amount: installmentAmount,
+        due_date: dueDate.toISOString().split("T")[0],
+        is_paid: false,
+      })
+    }
+
+    const { error } = await this.supabase.from("installments").insert(installmentsData)
+
+    if (error) throw error
+
+    // Add to local data
+    this.installments.push(
+      ...installmentsData.map((inst) => ({
+        ...inst,
+        installmentNumber: inst.installment_number,
+        totalInstallments: inst.total_installments,
+        dueDate: inst.due_date,
+        isPaid: inst.is_paid,
+        creditCardId: inst.credit_card_id,
+        transactionId: inst.transaction_id,
+      })),
+    )
+  }
+
+  async updateCreditCardBalance(creditCardId, amount) {
+    const cardIndex = this.creditCards.findIndex((c) => c.id === creditCardId)
+    if (cardIndex === -1) return
+
+    const newBalance = this.creditCards[cardIndex].currentBalance + amount
+
+    const { error } = await this.supabase
+      .from("credit_cards")
+      .update({ current_balance: newBalance })
+      .eq("id", creditCardId)
+      .eq("user_id", this.currentUserId)
+
+    if (error) throw error
+
+    this.creditCards[cardIndex].currentBalance = newBalance
+  }
+
   deleteTransaction(transactionId) {
-    this.transactionToDelete = transactionId
-    document.getElementById("delete-modal").classList.remove("hidden")
+    const transaction = this.transactions.find((t) => t.id === transactionId)
+    if (!transaction) return
+
+    this.transactionToDelete = { type: "transaction", id: transactionId, name: transaction.description }
+    const modal = document.getElementById("delete-modal")
+    const modalText = modal?.querySelector(".modal-text")
+
+    if (modalText) {
+      modalText.textContent = `Tem certeza que deseja excluir a transação "${transaction.description}"? Esta ação não pode ser desfeita.`
+    }
+
+    if (modal) {
+      modal.classList.remove("hidden")
+    }
   }
 
-  /**
-   * Confirms and performs the deletion of a transaction.
-   */
-  confirmDelete() {
-    if (this.transactionToDelete) {
-      this.transactions = this.transactions.filter((t) => t.id !== this.transactionToDelete)
-      this.saveUserData()
+  async confirmDelete() {
+    if (!this.transactionToDelete) return
+
+    const { type, id } = this.transactionToDelete
+
+    try {
+      if (type === "bank") {
+        // Delete bank and all its transactions
+        const { error } = await this.supabase.from("banks").delete().eq("id", id).eq("user_id", this.currentUserId)
+
+        if (error) throw error
+
+        this.banks = this.banks.filter((b) => b.id !== id)
+        this.transactions = this.transactions.filter((t) => t.bankId !== id)
+
+        console.log(`🗑️ Banco excluído`)
+      } else if (type === "card") {
+        // Delete credit card
+        const { error } = await this.supabase
+          .from("credit_cards")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", this.currentUserId)
+
+        if (error) throw error
+
+        this.creditCards = this.creditCards.filter((c) => c.id !== id)
+        this.transactions = this.transactions.filter((t) => t.creditCardId !== id)
+        this.installments = this.installments.filter((i) => i.creditCardId !== id)
+
+        console.log(`🗑️ Cartão excluído`)
+      } else if (type === "transaction") {
+        // Delete transaction
+        const { error } = await this.supabase
+          .from("transactions")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", this.currentUserId)
+
+        if (error) throw error
+
+        this.transactions = this.transactions.filter((t) => t.id !== id)
+
+        console.log(`🗑️ Transação excluída`)
+      }
+
       this.updateUI()
       this.hideDeleteModal()
+    } catch (error) {
+      console.error("Erro ao excluir:", error)
+      alert("Erro ao excluir. Tente novamente.")
     }
   }
 
-  /**
-   * Hides the delete confirmation modal.
-   */
   hideDeleteModal() {
     document.getElementById("delete-modal").classList.add("hidden")
     this.transactionToDelete = null
   }
 
-  /**
-   * Resets the transaction form fields to their default states.
-   */
   resetTransactionForm() {
     document.getElementById("transaction-form").reset()
-    this.setCurrentDate() // Set current date again
-    document.querySelector('input[name="type"][value="receita"]').checked = true // Default to income
+    this.setCurrentDate()
+    document.querySelector('input[name="type"][value="receita"]').checked = true
+    document.getElementById("payment-method").value = "bank"
+    this.handlePaymentMethodChange("bank")
   }
 
-  /**
-   * Sets the date input field to the current date.
-   */
   setCurrentDate() {
-    document.getElementById("date").valueAsDate = new Date()
+    const dateInput = document.getElementById("date")
+    if (dateInput) {
+      dateInput.valueAsDate = new Date()
+    }
   }
 
-  /**
-   * Updates all dynamic parts of the user interface.
-   */
   updateUI() {
     this.renderBanks()
     this.renderBankTabs()
@@ -383,11 +756,10 @@ class BankBalanceTracker {
     this.renderTransactions()
     this.updateSummary()
     this.updateChart()
+    this.renderCreditCards()
+    this.updateCreditCardSelect()
   }
 
-  /**
-   * Renders the bank cards in the "Meus Bancos" section.
-   */
   renderBanks() {
     const container = document.getElementById("banks-container")
 
@@ -396,7 +768,7 @@ class BankBalanceTracker {
         <div class="empty-state" style="grid-column: 1 / -1; padding: var(--spacing-2xl); text-align: center;">
           <i class="ri-bank-line" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--spacing-md);"></i>
           <p style="color: var(--text-muted); font-size: 1rem; font-weight: 500; margin-bottom: var(--spacing-sm);">Nenhum banco cadastrado</p>
-          <small style="color: var(--text-muted); font-size: 0.875rem;">Clique em "Adicionar Banco" para começar a gerenciar suas contas</small>
+          <small style="color: var(--text-muted); font-size: 0.875rem;">Clique em "Adicionar Banco" para começar</small>
         </div>
       `
       return
@@ -409,15 +781,15 @@ class BankBalanceTracker {
         const balanceClass = balance > 0 ? "positive" : balance < 0 ? "negative" : "zero"
 
         return `
-        <div class="bank-card" role="region" aria-label="Cartão do Banco ${bank.name}">
+        <div class="bank-card">
           <div class="bank-card-header">
             <h3 class="bank-name">🏦 ${bank.name}</h3>
             <div class="bank-actions">
-              <button class="bank-action-btn" onclick="app.editBank(${bank.id})" title="Editar banco" aria-label="Editar banco ${bank.name}">
-                <i class="ri-edit-line" aria-hidden="true"></i>
+              <button class="bank-action-btn" onclick="app.editBank('${bank.id}')" title="Editar banco">
+                <i class="ri-edit-line"></i>
               </button>
-              <button class="bank-action-btn" onclick="app.deleteBank(${bank.id})" title="Excluir banco" aria-label="Excluir banco ${bank.name}">
-                <i class="ri-delete-bin-line" aria-hidden="true"></i>
+              <button class="bank-action-btn" onclick="app.deleteBank('${bank.id}')" title="Excluir banco">
+                <i class="ri-delete-bin-line"></i>
               </button>
             </div>
           </div>
@@ -435,31 +807,23 @@ class BankBalanceTracker {
     container.innerHTML = bankCards
   }
 
-  /**
-   * Renders the bank tabs for filtering transactions.
-   */
   renderBankTabs() {
     const container = document.getElementById("bank-tabs")
-    const allBanksLabel = "Todos os Bancos"
-    const noBankLabel = "Dinheiro"
 
     let tabs = `
-      <button class="bank-tab ${this.currentBankFilter === "all" ? "active" : ""}" 
-              onclick="app.setCurrentBankFilter('all')" role="tab" aria-selected="${this.currentBankFilter === "all"}" tabindex="${this.currentBankFilter === "all" ? "0" : "-1"}">
-          ${allBanksLabel}
+      <button class="bank-tab ${this.currentBankFilter === "all" ? "active" : ""}" data-filter="all">
+        Todos os Bancos
       </button>
-      <button class="bank-tab ${this.currentBankFilter === "none" ? "active" : ""}" 
-              onclick="app.setCurrentBankFilter('none')" role="tab" aria-selected="${this.currentBankFilter === "none"}" tabindex="${this.currentBankFilter === "none" ? "0" : "-1"}">
-          ${noBankLabel}
+      <button class="bank-tab ${this.currentBankFilter === "none" ? "active" : ""}" data-filter="none">
+        💵 Dinheiro
       </button>
     `
 
     tabs += this.banks
       .map(
         (bank) => `
-      <button class="bank-tab ${this.currentBankFilter === bank.id.toString() ? "active" : ""}" 
-              onclick="app.setCurrentBankFilter('${bank.id}')" role="tab" aria-selected="${this.currentBankFilter === bank.id.toString()}" tabindex="${this.currentBankFilter === bank.id.toString() ? "0" : "-1"}">
-          ${bank.name}
+      <button class="bank-tab ${this.currentBankFilter === bank.id ? "active" : ""}" data-filter="${bank.id}">
+        🏦 ${bank.name}
       </button>
     `,
       )
@@ -468,18 +832,23 @@ class BankBalanceTracker {
     container.innerHTML = tabs
   }
 
-  /**
-   * Sets the current bank filter and updates the UI.
-   * @param {string} filter - The filter value ('all', 'none' for no bank, or bank ID as string).
-   */
   setCurrentBankFilter(filter) {
-    this.currentBankFilter = filter
-    this.updateUI()
+    this.currentBankFilter = filter.toString()
+
+    document.querySelectorAll(".bank-tab").forEach((tab) => {
+      const tabFilter = tab.getAttribute("data-filter")
+      if (tabFilter === this.currentBankFilter) {
+        tab.classList.add("active")
+      } else {
+        tab.classList.remove("active")
+      }
+    })
+
+    this.renderTransactions()
+    this.updateSummary()
+    this.updateChart()
   }
 
-  /**
-   * Populates the bank selection dropdown in the transaction form.
-   */
   updateBankSelect() {
     const select = document.getElementById("bank-select")
 
@@ -489,9 +858,6 @@ class BankBalanceTracker {
     select.innerHTML = options
   }
 
-  /**
-   * Populates the bank filter dropdown for the chart.
-   */
   updateChartBankFilter() {
     const select = document.getElementById("chart-bank-filter")
 
@@ -499,40 +865,28 @@ class BankBalanceTracker {
     options += this.banks.map((bank) => `<option value="${bank.id}">${bank.name}</option>`).join("")
 
     select.innerHTML = options
-    select.value = this.currentBankFilter // Keep current selection
+    select.value = this.currentBankFilter
   }
 
-  /**
-   * Renders the list of transactions based on the current filters.
-   */
   renderTransactions() {
     const list = document.getElementById("transactions-list")
 
-    let filteredTransactions = [...this.transactions] // Create a shallow copy to sort
+    let filteredTransactions = [...this.transactions]
 
-    // Apply bank filter
     if (this.currentBankFilter !== "all") {
       if (this.currentBankFilter === "none") {
         filteredTransactions = filteredTransactions.filter((t) => !t.bankId)
       } else {
-        const bankId = Number.parseInt(this.currentBankFilter)
-        filteredTransactions = filteredTransactions.filter((t) => t.bankId === bankId)
+        filteredTransactions = filteredTransactions.filter((t) => t.bankId === this.currentBankFilter)
       }
     }
 
     if (filteredTransactions.length === 0) {
-      const filterText =
-        this.currentBankFilter === "all"
-          ? "nenhuma transação registrada"
-          : this.currentBankFilter === "none"
-            ? "nenhuma transação em dinheiro"
-            : `nenhuma transação para ${this.banks.find((b) => b.id === Number.parseInt(this.currentBankFilter))?.name || "este banco"}`
-
       list.innerHTML = `
         <li class="no-transactions">
           <div class="empty-state">
             <i class="ri-file-list-line"></i>
-            <p>${filterText.charAt(0).toUpperCase() + filterText.slice(1)}</p>
+            <p>Nenhuma transação encontrada</p>
             <small>Adicione uma nova transação acima</small>
           </div>
         </li>
@@ -540,13 +894,17 @@ class BankBalanceTracker {
       return
     }
 
-    // Sort by date (newest first)
     const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date))
 
     list.innerHTML = sortedTransactions
       .map((transaction) => {
         const bank = this.banks.find((b) => b.id === transaction.bankId)
-        const bankName = bank ? `🏦 ${bank.name}` : "💵 Dinheiro"
+        const card = this.creditCards.find((c) => c.id === transaction.creditCardId)
+
+        let paymentMethod = "💵 Dinheiro"
+        if (bank) paymentMethod = `🏦 ${bank.name}`
+        if (card) paymentMethod = `💳 ${card.name}`
+
         const isIncome = transaction.type === "receita"
         const icon = isIncome ? "ri-arrow-up-circle-line" : "ri-arrow-down-circle-line"
         const iconClass = isIncome ? "income" : "expense"
@@ -564,7 +922,7 @@ class BankBalanceTracker {
               <div class="transaction-meta">
                 <span>${transaction.category}</span>
                 <span>•</span>
-                <span>${bankName}</span>
+                <span>${paymentMethod}</span>
                 <span>•</span>
                 <span>${this.formatDate(transaction.date)}</span>
               </div>
@@ -574,7 +932,7 @@ class BankBalanceTracker {
             <span class="amount-value ${amountClass}">
               ${amountPrefix}${this.formatCurrency(transaction.amount)}
             </span>
-            <button class="delete-btn" onclick="app.deleteTransaction(${transaction.id})" title="Excluir transação">
+            <button class="delete-btn" onclick="app.deleteTransaction('${transaction.id}')" title="Excluir transação">
               <i class="ri-delete-bin-line"></i>
             </button>
           </div>
@@ -587,30 +945,25 @@ class BankBalanceTracker {
   updateSummary() {
     let filteredTransactions = this.transactions
 
-    // Apply bank filter
     if (this.currentBankFilter !== "all") {
       if (this.currentBankFilter === "none") {
         filteredTransactions = filteredTransactions.filter((t) => !t.bankId)
       } else {
-        const bankId = Number.parseInt(this.currentBankFilter)
-        filteredTransactions = filteredTransactions.filter((t) => t.bankId === bankId)
+        filteredTransactions = filteredTransactions.filter((t) => t.bankId === this.currentBankFilter)
       }
     }
 
     const totalIncome = filteredTransactions.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount, 0)
-
     const totalExpense = filteredTransactions.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount, 0)
-
     const balance = totalIncome - totalExpense
 
-    // Add initial balances if showing specific bank or all banks
     let initialBalance = 0
     if (this.currentBankFilter === "all") {
-      initialBalance = this.banks.reduce((sum, bank) => sum + bank.initialBalance, 0)
+      initialBalance = this.banks.reduce((sum, bank) => sum + (bank.initialBalance || 0), 0)
     } else if (this.currentBankFilter !== "none") {
-      const bank = this.banks.find((b) => b.id === Number.parseInt(this.currentBankFilter))
+      const bank = this.banks.find((b) => b.id === this.currentBankFilter)
       if (bank) {
-        initialBalance = bank.initialBalance
+        initialBalance = bank.initialBalance || 0
       }
     }
 
@@ -638,10 +991,8 @@ class BankBalanceTracker {
 
     let filteredTransactions = this.transactions
 
-    // Apply bank filter
     if (bankFilter !== "all") {
-      const bankId = Number.parseInt(bankFilter)
-      filteredTransactions = filteredTransactions.filter((t) => t.bankId === bankId)
+      filteredTransactions = filteredTransactions.filter((t) => t.bankId === bankFilter)
     }
 
     const chartDom = document.getElementById("chart")
@@ -650,7 +1001,14 @@ class BankBalanceTracker {
       this.chart.dispose()
     }
 
-    this.chart = this.echarts.init(chartDom, "dark")
+    try {
+      this.chart = this.echarts.init(chartDom, "dark")
+    } catch (error) {
+      console.error("Erro ao inicializar gráfico:", error)
+      chartDom.innerHTML =
+        '<div style="display: flex; align-items: center; justify-content: center; height: 400px; color: #64748b;">📊 Erro ao carregar gráfico</div>'
+      return
+    }
 
     let option
 
@@ -668,9 +1026,15 @@ class BankBalanceTracker {
         option = this.getCategoryChartOption(filteredTransactions)
     }
 
-    this.chart.setOption(option)
+    try {
+      this.chart.setOption(option)
+    } catch (error) {
+      console.error("Erro ao renderizar gráfico:", error)
+      chartDom.innerHTML =
+        '<div style="display: flex; align-items: center; justify-content: center; height: 400px; color: #64748b;">📊 Erro ao renderizar gráfico</div>'
+      return
+    }
 
-    // Handle resize
     window.addEventListener("resize", () => {
       if (this.chart) {
         this.chart.resize()
@@ -690,6 +1054,29 @@ class BankBalanceTracker {
       }
     })
 
+    if (Object.keys(categoryData).length === 0) {
+      return {
+        title: {
+          text: "💸 Despesas por Categoria",
+          subtext: "Nenhuma despesa encontrada",
+          left: "center",
+          textStyle: { color: "#f8fafc", fontSize: 18, fontWeight: 600 },
+          subtextStyle: { color: "#64748b", fontSize: 14 },
+        },
+        graphic: {
+          type: "text",
+          left: "center",
+          top: "middle",
+          style: {
+            text: "📊\n\nNenhuma despesa para exibir\nAdicione algumas transações",
+            textAlign: "center",
+            fill: "#64748b",
+            fontSize: 16,
+          },
+        },
+      }
+    }
+
     const sortedCategories = Object.entries(categoryData)
       .sort(([, a], [, b]) => b - a)
       .reduce((acc, [key, value]) => {
@@ -700,30 +1087,42 @@ class BankBalanceTracker {
     const categories = Object.keys(sortedCategories)
     const values = Object.values(sortedCategories)
 
+    const colors = [
+      "#ef4444",
+      "#ec4899",
+      "#22c55e",
+      "#f97316",
+      "#eab308",
+      "#84cc16",
+      "#06b6d4",
+      "#3b82f6",
+      "#8b5cf6",
+      "#f59e0b",
+    ]
+
     return {
       title: {
-        text: "Despesas por Categoria",
+        text: "💸 Despesas por Categoria",
         left: "center",
-        textStyle: {
-          color: "#f8fafc",
-          fontSize: 16,
-          fontWeight: 600,
-        },
+        textStyle: { color: "#f8fafc", fontSize: 18, fontWeight: 600 },
       },
       tooltip: {
         trigger: "axis",
-        axisPointer: {
-          type: "shadow",
-        },
+        axisPointer: { type: "shadow" },
+        backgroundColor: "rgba(26, 13, 13, 0.95)",
+        borderColor: "#ef4444",
+        borderWidth: 2,
+        textStyle: { color: "#f8fafc" },
         formatter: (params) => {
-          return `${params[0].name}: ${this.formatCurrency(params[0].value)}`
+          if (params.length === 0) return "Sem dados"
+          return `<strong>${params[0].name}</strong><br/>💰 ${this.formatCurrency(params[0].value)}`
         },
       },
       grid: {
         left: "3%",
         right: "4%",
         bottom: "3%",
-        top: "60px",
+        top: "80px",
         containLabel: true,
       },
       xAxis: {
@@ -732,44 +1131,32 @@ class BankBalanceTracker {
           formatter: (value) => this.formatCurrency(value),
           color: "#cbd5e1",
         },
-        axisLine: {
-          lineStyle: {
-            color: "#475569",
-          },
-        },
-        splitLine: {
-          lineStyle: {
-            color: "#334155",
-          },
-        },
+        axisLine: { lineStyle: { color: "#ef4444" } },
+        splitLine: { lineStyle: { color: "#475569" } },
       },
       yAxis: {
         type: "category",
-        data: categories.length > 0 ? categories : ["Sem dados"],
-        axisLabel: {
-          color: "#cbd5e1",
-        },
-        axisLine: {
-          lineStyle: {
-            color: "#475569",
-          },
-        },
+        data: categories,
+        axisLabel: { color: "#cbd5e1" },
+        axisLine: { lineStyle: { color: "#ef4444" } },
       },
       series: [
         {
           name: "Despesas",
           type: "bar",
-          data: values.length > 0 ? values : [0],
-          itemStyle: {
-            color: "#ef4444",
-            borderRadius: [0, 4, 4, 0],
-          },
-          barWidth: "60%",
+          data: values.map((value, index) => ({
+            value: value,
+            itemStyle: { color: colors[index % colors.length] },
+          })),
+          itemStyle: { borderRadius: [0, 8, 8, 0] },
+          barWidth: "70%",
           label: {
             show: true,
             position: "right",
             formatter: (params) => this.formatCurrency(params.value),
             color: "#cbd5e1",
+            fontSize: 12,
+            fontWeight: 500,
           },
         },
       ],
@@ -779,59 +1166,93 @@ class BankBalanceTracker {
   getBankChartOption() {
     const bankData = this.banks.map((bank) => ({
       name: bank.name,
-      value: this.calculateBankBalance(bank.id),
+      value: Math.abs(this.calculateBankBalance(bank.id)),
+      originalValue: this.calculateBankBalance(bank.id),
     }))
 
-    // Add "Sem Banco" transactions
     const noBankTransactions = this.transactions.filter((t) => !t.bankId)
     const noBankIncome = noBankTransactions.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount, 0)
     const noBankExpense = noBankTransactions.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount, 0)
     const noBankBalance = noBankIncome - noBankExpense
 
-    if (noBankBalance !== 0) {
+    if (Math.abs(noBankBalance) > 0) {
       bankData.push({
-        name: "Dinheiro",
-        value: noBankBalance,
+        name: "💵 Dinheiro",
+        value: Math.abs(noBankBalance),
+        originalValue: noBankBalance,
       })
     }
 
+    if (bankData.length === 0 || bankData.every((item) => item.value === 0)) {
+      return {
+        title: {
+          text: "🏦 Saldo por Banco",
+          subtext: "Nenhum saldo encontrado",
+          left: "center",
+          textStyle: { color: "#f8fafc", fontSize: 18, fontWeight: 600 },
+          subtextStyle: { color: "#64748b", fontSize: 14 },
+        },
+        graphic: {
+          type: "text",
+          left: "center",
+          top: "middle",
+          style: {
+            text: "🏦\n\nNenhum saldo para exibir\nAdicione bancos e transações",
+            textAlign: "center",
+            fill: "#64748b",
+            fontSize: 16,
+          },
+        },
+      }
+    }
+
+    const colors = ["#22c55e", "#ec4899", "#ef4444", "#f97316", "#eab308", "#06b6d4", "#3b82f6", "#8b5cf6"]
+
     return {
       title: {
-        text: "Saldo por Banco",
+        text: "🏦 Saldo por Banco",
         left: "center",
-        textStyle: {
-          color: "#f8fafc",
-          fontSize: 16,
-          fontWeight: 600,
-        },
+        textStyle: { color: "#f8fafc", fontSize: 18, fontWeight: 600 },
       },
       tooltip: {
         trigger: "item",
+        backgroundColor: "rgba(13, 26, 13, 0.95)",
+        borderColor: "#22c55e",
+        borderWidth: 2,
+        textStyle: { color: "#f8fafc" },
         formatter: (params) => {
-          return `${params.name}: ${this.formatCurrency(params.value)}`
+          const percentage = params.percent
+          const originalValue = params.data.originalValue
+          return `<strong>${params.name}</strong><br/>💰 ${this.formatCurrency(originalValue)} (${percentage}%)`
         },
       },
       series: [
         {
           name: "Saldo",
           type: "pie",
-          radius: "70%",
-          data: bankData,
+          radius: ["40%", "80%"],
+          data: bankData.map((item, index) => ({
+            ...item,
+            itemStyle: { color: colors[index % colors.length] },
+          })),
           itemStyle: {
-            borderRadius: 8,
+            borderRadius: 10,
             borderColor: "#1e293b",
-            borderWidth: 2,
+            borderWidth: 3,
           },
           label: {
-            formatter: "{b}: {c}",
+            formatter: (params) => `${params.name}\n${this.formatCurrency(params.data.originalValue)}`,
             color: "#cbd5e1",
+            fontSize: 12,
+            fontWeight: 500,
           },
           emphasis: {
             itemStyle: {
-              shadowBlur: 10,
+              shadowBlur: 20,
               shadowOffsetX: 0,
-              shadowColor: "rgba(0, 0, 0, 0.5)",
+              shadowColor: "rgba(0, 0, 0, 0.8)",
             },
+            label: { fontSize: 14, fontWeight: 600 },
           },
         },
       ],
@@ -839,7 +1260,29 @@ class BankBalanceTracker {
   }
 
   getTimelineChartOption(transactions) {
-    // Group transactions by month
+    if (transactions.length === 0) {
+      return {
+        title: {
+          text: "📈 Evolução Financeira",
+          subtext: "Nenhuma transação encontrada",
+          left: "center",
+          textStyle: { color: "#f8fafc", fontSize: 18, fontWeight: 600 },
+          subtextStyle: { color: "#64748b", fontSize: 14 },
+        },
+        graphic: {
+          type: "text",
+          left: "center",
+          top: "middle",
+          style: {
+            text: "📈\n\nNenhuma transação para exibir\nAdicione algumas transações",
+            textAlign: "center",
+            fill: "#64748b",
+            fontSize: 16,
+          },
+        },
+      }
+    }
+
     const monthlyData = {}
 
     transactions.forEach((t) => {
@@ -864,36 +1307,35 @@ class BankBalanceTracker {
 
     return {
       title: {
-        text: "Evolução Financeira",
+        text: "📈 Evolução Financeira",
         left: "center",
-        textStyle: {
-          color: "#f8fafc",
-          fontSize: 16,
-          fontWeight: 600,
-        },
+        textStyle: { color: "#f8fafc", fontSize: 18, fontWeight: 600 },
       },
       tooltip: {
         trigger: "axis",
+        backgroundColor: "rgba(26, 13, 26, 0.95)",
+        borderColor: "#ec4899",
+        borderWidth: 2,
+        textStyle: { color: "#f8fafc" },
         formatter: (params) => {
-          let result = `${params[0].axisValue}<br/>`
+          let result = `<strong>${params[0].axisValue}</strong><br/>`
           params.forEach((param) => {
-            result += `${param.seriesName}: ${this.formatCurrency(param.value)}<br/>`
+            const icon = param.seriesName === "💚 Receitas" ? "💚" : param.seriesName === "❤️ Despesas" ? "❤️" : "💖"
+            result += `${icon} ${param.seriesName}: ${this.formatCurrency(param.value)}<br/>`
           })
           return result
         },
       },
       legend: {
-        data: ["Receitas", "Despesas", "Saldo"],
-        textStyle: {
-          color: "#cbd5e1",
-        },
-        top: 40,
+        data: ["💚 Receitas", "❤️ Despesas", "💖 Saldo"],
+        textStyle: { color: "#cbd5e1", fontSize: 12 },
+        top: 50,
       },
       grid: {
         left: "3%",
         right: "4%",
         bottom: "3%",
-        top: "80px",
+        top: "100px",
         containLabel: true,
       },
       xAxis: {
@@ -902,14 +1344,8 @@ class BankBalanceTracker {
           const [year, monthNum] = month.split("-")
           return new Date(year, monthNum - 1).toLocaleDateString("pt-BR", { month: "short", year: "numeric" })
         }),
-        axisLabel: {
-          color: "#cbd5e1",
-        },
-        axisLine: {
-          lineStyle: {
-            color: "#475569",
-          },
-        },
+        axisLabel: { color: "#cbd5e1" },
+        axisLine: { lineStyle: { color: "#ec4899" } },
       },
       yAxis: {
         type: "value",
@@ -917,46 +1353,281 @@ class BankBalanceTracker {
           formatter: (value) => this.formatCurrency(value),
           color: "#cbd5e1",
         },
-        axisLine: {
-          lineStyle: {
-            color: "#475569",
-          },
-        },
-        splitLine: {
-          lineStyle: {
-            color: "#334155",
-          },
-        },
+        axisLine: { lineStyle: { color: "#ec4899" } },
+        splitLine: { lineStyle: { color: "#475569", type: "dashed" } },
       },
       series: [
         {
-          name: "Receitas",
+          name: "💚 Receitas",
           type: "line",
           data: incomeData,
-          itemStyle: {
-            color: "#10b981",
-          },
+          itemStyle: { color: "#22c55e" },
+          lineStyle: { width: 4, color: "#22c55e" },
+          symbol: "circle",
+          symbolSize: 8,
           smooth: true,
+          areaStyle: {
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: "rgba(34, 197, 94, 0.3)" },
+                { offset: 1, color: "rgba(34, 197, 94, 0.05)" },
+              ],
+            },
+          },
         },
         {
-          name: "Despesas",
+          name: "❤️ Despesas",
           type: "line",
           data: expenseData,
-          itemStyle: {
-            color: "#ef4444",
-          },
+          itemStyle: { color: "#ef4444" },
+          lineStyle: { width: 4, color: "#ef4444" },
+          symbol: "circle",
+          symbolSize: 8,
           smooth: true,
+          areaStyle: {
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: "rgba(239, 68, 68, 0.3)" },
+                { offset: 1, color: "rgba(239, 68, 68, 0.05)" },
+              ],
+            },
+          },
         },
         {
-          name: "Saldo",
-          type: "bar",
+          name: "💖 Saldo",
+          type: "line",
           data: balanceData,
-          itemStyle: {
-            color: "#ec4899",
+          itemStyle: { color: "#ec4899" },
+          lineStyle: { width: 5, color: "#ec4899", type: "solid" },
+          symbol: "diamond",
+          symbolSize: 10,
+          smooth: true,
+          emphasis: {
+            focus: "series",
+            lineStyle: { width: 6 },
           },
         },
       ],
     }
+  }
+
+  handlePaymentMethodChange(method) {
+    const bankSelectGroup = document.getElementById("bank-select-group")
+    const creditCardFields = document.getElementById("credit-card-fields")
+    const bankSelect = document.getElementById("bank-select")
+    const creditCardSelect = document.getElementById("credit-card-select")
+
+    if (method === "credit") {
+      bankSelectGroup.classList.add("hidden")
+      creditCardFields.classList.remove("hidden")
+      bankSelect.value = ""
+    } else if (method === "bank") {
+      bankSelectGroup.classList.remove("hidden")
+      creditCardFields.classList.add("hidden")
+      creditCardSelect.value = ""
+    } else {
+      bankSelectGroup.classList.add("hidden")
+      creditCardFields.classList.add("hidden")
+      bankSelect.value = ""
+      creditCardSelect.value = ""
+    }
+  }
+
+  showCreditCardModal(cardData = null) {
+    const modal = document.getElementById("card-modal")
+    const title = document.getElementById("card-modal-title")
+    const nameInput = document.getElementById("card-name")
+    const limitInput = document.getElementById("card-limit")
+    const dueDayInput = document.getElementById("card-due-day")
+
+    if (cardData) {
+      title.textContent = "Editar Cartão"
+      nameInput.value = cardData.name
+      limitInput.value = cardData.creditLimit.toFixed(2)
+      dueDayInput.value = cardData.dueDay
+      this.creditCardToEdit = cardData.id
+    } else {
+      title.textContent = "Adicionar Cartão"
+      nameInput.value = ""
+      limitInput.value = "0.00"
+      dueDayInput.value = "15"
+      this.creditCardToEdit = null
+    }
+
+    modal.classList.remove("hidden")
+    nameInput.focus()
+  }
+
+  hideCreditCardModal() {
+    document.getElementById("card-modal").classList.add("hidden")
+    document.getElementById("card-form").reset()
+    this.creditCardToEdit = null
+  }
+
+  async handleCreditCardSubmit() {
+    const name = document.getElementById("card-name").value.trim()
+    const creditLimit = Number.parseFloat(document.getElementById("card-limit").value) || 0
+    const dueDay = Number.parseInt(document.getElementById("card-due-day").value) || 15
+
+    if (!name) {
+      alert("Por favor, insira o nome do cartão.")
+      return
+    }
+
+    if (!this.currentUserId) {
+      alert("Erro: usuário não autenticado.")
+      return
+    }
+
+    try {
+      if (this.creditCardToEdit) {
+        const { error } = await this.supabase
+          .from("credit_cards")
+          .update({
+            name: name,
+            credit_limit: creditLimit,
+            due_day: dueDay,
+          })
+          .eq("id", this.creditCardToEdit)
+          .eq("user_id", this.currentUserId)
+
+        if (error) throw error
+
+        const cardIndex = this.creditCards.findIndex((c) => c.id === this.creditCardToEdit)
+        if (cardIndex !== -1) {
+          this.creditCards[cardIndex].name = name
+          this.creditCards[cardIndex].creditLimit = creditLimit
+          this.creditCards[cardIndex].dueDay = dueDay
+        }
+
+        console.log(`✏️ Cartão editado: ${name}`)
+      } else {
+        const { data, error } = await this.supabase
+          .from("credit_cards")
+          .insert({
+            user_id: this.currentUserId,
+            name: name,
+            credit_limit: creditLimit,
+            current_balance: 0,
+            closing_day: 1,
+            due_day: dueDay,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+
+        this.creditCards.push({
+          id: data.id,
+          name: name,
+          creditLimit: creditLimit,
+          currentBalance: 0,
+          closingDay: 1,
+          dueDay: dueDay,
+          createdAt: data.created_at,
+        })
+
+        console.log(`➕ Cartão adicionado: ${name}`)
+      }
+
+      this.updateUI()
+      this.hideCreditCardModal()
+    } catch (error) {
+      console.error("Erro ao salvar cartão:", error)
+      alert("Erro ao salvar cartão. Tente novamente.")
+    }
+  }
+
+  editCreditCard(cardId) {
+    const card = this.creditCards.find((c) => c.id === cardId)
+    if (card) {
+      this.showCreditCardModal(card)
+    }
+  }
+
+  async deleteCreditCard(cardId) {
+    const card = this.creditCards.find((c) => c.id === cardId)
+    if (!card) return
+
+    this.transactionToDelete = { type: "card", id: cardId, name: card.name }
+    const modal = document.getElementById("delete-modal")
+    const modalText = modal?.querySelector(".modal-text")
+
+    if (modalText) {
+      modalText.textContent = `Tem certeza que deseja excluir o cartão "${card.name}" e todas as suas transações? Esta ação não pode ser desfeita.`
+    }
+
+    if (modal) {
+      modal.classList.remove("hidden")
+    }
+  }
+
+  renderCreditCards() {
+    const container = document.getElementById("cards-container")
+
+    if (this.creditCards.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1; padding: var(--spacing-2xl); text-align: center;">
+          <i class="ri-bank-card-line" style="font-size: 3rem; color: var(--text-muted); margin-bottom: var(--spacing-md);"></i>
+          <p style="color: var(--text-muted); font-size: 1rem; font-weight: 500; margin-bottom: var(--spacing-sm);">Nenhum cartão cadastrado</p>
+          <small style="color: var(--text-muted); font-size: 0.875rem;">Clique em "Adicionar Cartão" para começar</small>
+        </div>
+      `
+      return
+    }
+
+    const cardCards = this.creditCards
+      .map((card) => {
+        const availableLimit = card.creditLimit - card.currentBalance
+        const usagePercentage = card.creditLimit > 0 ? (card.currentBalance / card.creditLimit) * 100 : 0
+        const limitClass = usagePercentage > 80 ? "negative" : usagePercentage > 60 ? "warning" : "positive"
+
+        return `
+        <div class="card-item">
+          <div class="card-header">
+            <h3 class="card-name">💳 ${card.name}</h3>
+            <div class="card-actions">
+              <button class="card-action-btn" onclick="app.editCreditCard('${card.id}')" title="Editar cartão">
+                <i class="ri-edit-line"></i>
+              </button>
+              <button class="card-action-btn" onclick="app.deleteCreditCard('${card.id}')" title="Excluir cartão">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-limit">${this.formatCurrency(card.creditLimit)}</div>
+          <div class="card-available ${limitClass}">
+            Disponível: ${this.formatCurrency(availableLimit)}
+          </div>
+          <div class="card-due-date">
+            Vencimento: dia ${card.dueDay}
+          </div>
+        </div>
+      `
+      })
+      .join("")
+
+    container.innerHTML = cardCards
+  }
+
+  updateCreditCardSelect() {
+    const select = document.getElementById("credit-card-select")
+    if (!select) return
+
+    let options = '<option value="">Selecione um cartão</option>'
+    options += this.creditCards.map((card) => `<option value="${card.id}">${card.name}</option>`).join("")
+
+    select.innerHTML = options
   }
 
   formatCurrency(value) {
@@ -974,3 +1645,6 @@ class BankBalanceTracker {
 
 // Initialize the app
 const app = new BankBalanceTracker()
+
+// Make functions available globally for onclick handlers
+window.app = app

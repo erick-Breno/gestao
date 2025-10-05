@@ -10,10 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Login Page -->
     <div id="login-page" class="login-page">
         <div class="login-container">
             <div class="login-header">
@@ -23,8 +23,8 @@
             </div>
             <form id="login-form" class="login-form" aria-label="Formulário de Login">
                 <div class="input-group">
-                    <label for="username">Usuário</label>
-                    <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="username">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Digite seu email" required autocomplete="email">
                 </div>
                 <div class="input-group">
                     <label for="password">Senha</label>
@@ -41,7 +41,6 @@
         </div>
     </div>
 
-    <!-- Navigation Bar -->
     <nav class="navbar hidden" aria-label="Barra de Navegação Principal">
         <div class="nav-content">
             <div class="nav-brand">
@@ -56,192 +55,270 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+  
     <main class="main-content hidden">
-        <!-- Bank Management Section -->
-        <section class="bank-management" aria-labelledby="banks-section-title">
-            <div class="section-header">
-                <div class="section-title">
-                    <h2 id="banks-section-title"><i class="ri-bank-line" aria-hidden="true"></i> Meus Bancos</h2>
-                    <p class="section-subtitle">Gerencie suas contas bancárias</p>
-                </div>
-                <button id="add-bank-btn" class="btn-secondary" aria-label="Adicionar novo banco">
-                    <i class="ri-add-line" aria-hidden="true"></i> Adicionar Banco
-                </button>
-            </div>
-            <div id="banks-container" class="banks-grid"></div>
-        </section>
 
-        <!-- Bank Tabs -->
-        <section class="bank-tabs-section" aria-labelledby="bank-tabs-title">
-            <div class="tabs-container">
-                <div id="bank-tabs" class="bank-tabs" role="tablist"></div>
-            </div>
-        </section>
-
-        <!-- Financial Summary -->
-        <section class="financial-summary" aria-labelledby="summary-section-title">
-            <div class="section-header">
-                <div class="section-title">
-                    <h2 id="summary-section-title"><i class="ri-pie-chart-line" aria-hidden="true"></i> Resumo Financeiro</h2>
-                    <p class="section-subtitle">Visão geral das suas finanças</p>
-                </div>
-            </div>
-            <div class="summary-grid">
-                <div class="summary-card income">
-                    <div class="card-icon" aria-hidden="true">
-                        <i class="ri-arrow-up-circle-line"></i>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-label">Receitas</p>
-                        <p class="card-value" id="total-receitas">R$ 0,00</p>
-                    </div>
-                </div>
-                <div class="summary-card expense">
-                    <div class="card-icon" aria-hidden="true">
-                        <i class="ri-arrow-down-circle-line"></i>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-label">Despesas</p>
-                        <p class="card-value" id="total-despesas">R$ 0,00</p>
-                    </div>
-                </div>
-                <div class="summary-card balance">
-                    <div class="card-icon" aria-hidden="true">
-                        <i class="ri-wallet-line"></i>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-label">Saldo Total</p>
-                        <p class="card-value" id="saldo-total">R$ 0,00</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Chart Section -->
-        <section class="chart-section" aria-labelledby="chart-section-title">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <div class="section-title">
-                        <h2 id="chart-section-title"><i class="ri-bar-chart-line" aria-hidden="true"></i> Análise Financeira</h2>
-                        <p class="section-subtitle">Visualize seus dados financeiros</p>
-                    </div>
-                    <div class="chart-controls">
-                        <label for="chart-bank-filter" class="visually-hidden">Filtrar por banco</label>
-                        <select id="chart-bank-filter" class="chart-filter" aria-label="Filtrar gráficos por banco">
-                            <option value="all">Todos os Bancos</option>
-                        </select>
-                        <label for="chart-type-filter" class="visually-hidden">Tipo de gráfico</label>
-                        <select id="chart-type-filter" class="chart-filter" aria-label="Selecionar tipo de gráfico">
-                            <option value="category">Por Categoria</option>
-                            <option value="bank">Por Banco</option>
-                            <option value="timeline">Linha do Tempo</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="chart" class="chart" role="img" aria-label="Gráfico financeiro"></div>
-            </div>
-        </section>
-
-        <!-- Transaction Form -->
-        <section class="transaction-form-section" aria-labelledby="transaction-form-title">
-            <div class="form-container">
+        <div id="home-section" class="nav-section active">
+        
+            <section class="bank-management" aria-labelledby="banks-section-title">
                 <div class="section-header">
                     <div class="section-title">
-                        <h2 id="transaction-form-title"><i class="ri-add-circle-line" aria-hidden="true"></i> Nova Transação</h2>
-                        <p class="section-subtitle">Registre uma nova receita ou despesa</p>
+                        <h2 id="banks-section-title"><i class="ri-bank-line" aria-hidden="true"></i> Meus Bancos</h2>
+                        <p class="section-subtitle">Gerencie suas contas bancárias</p>
+                    </div>
+                    <button id="add-bank-btn" class="btn-secondary" aria-label="Adicionar novo banco">
+                        <i class="ri-add-line" aria-hidden="true"></i> Adicionar Banco
+                    </button>
+                </div>
+                <div id="banks-container" class="banks-grid"></div>
+            </section>
+
+    
+            <section class="bank-tabs-section" aria-labelledby="bank-tabs-title">
+                <div class="tabs-container">
+                    <div id="bank-tabs" class="bank-tabs" role="tablist"></div>
+                </div>
+            </section>
+
+          
+            <section class="financial-summary" aria-labelledby="summary-section-title">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2 id="summary-section-title"><i class="ri-pie-chart-line" aria-hidden="true"></i> Resumo Financeiro</h2>
+                        <p class="section-subtitle">Visão geral das suas finanças</p>
                     </div>
                 </div>
-                <form id="transaction-form" class="transaction-form" aria-label="Formulário de Nova Transação">
-                    <div class="form-row">
-                        <div class="input-group">
-                            <label for="description">Descrição</label>
-                            <input type="text" id="description" placeholder="Ex: Mercado, Salário, Combustível" required>
+                <div class="summary-grid">
+                    <div class="summary-card income">
+                        <div class="card-icon" aria-hidden="true">
+                            <i class="ri-arrow-up-circle-line"></i>
                         </div>
-                        <div class="input-group">
-                            <label for="amount">Valor (R$)</label>
-                            <input type="number" id="amount" placeholder="0,00" min="0.01" step="0.01" required>
+                        <div class="card-content">
+                            <p class="card-label">Receitas</p>
+                            <p class="card-value" id="total-receitas">R$ 0,00</p>
                         </div>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="input-group">
-                            <label>Tipo de Transação</label>
-                            <div class="radio-group" role="radiogroup" aria-labelledby="transaction-type-label">
-                                <label class="radio-option">
-                                    <input type="radio" name="type" value="receita" checked aria-label="Receita">
-                                    <span class="radio-custom income" aria-hidden="true"></span>
-                                    <span>Receita</span>
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="type" value="despesa" aria-label="Despesa">
-                                    <span class="radio-custom expense" aria-hidden="true"></span>
-                                    <span>Despesa</span>
-                                </label>
+                    <div class="summary-card expense">
+                        <div class="card-icon" aria-hidden="true">
+                            <i class="ri-arrow-down-circle-line"></i>
+                        </div>
+                        <div class="card-content">
+                            <p class="card-label">Despesas</p>
+                            <p class="card-value" id="total-despesas">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="summary-card balance">
+                        <div class="card-icon" aria-hidden="true">
+                            <i class="ri-wallet-line"></i>
+                        </div>
+                        <div class="card-content">
+                            <p class="card-label">Saldo Total</p>
+                            <p class="card-value" id="saldo-total">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+         
+            <section class="transactions-section" aria-labelledby="transactions-section-title">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2 id="transactions-section-title"><i class="ri-history-line" aria-hidden="true"></i> Histórico de Transações</h2>
+                        <p class="section-subtitle">Todas as suas movimentações financeiras</p>
+                    </div>
+                </div>
+                <div class="transactions-container">
+                    <ul id="transactions-list" class="transactions-list" aria-label="Lista de transações">
+                        <li class="no-transactions">
+                            <div class="empty-state">
+                                <i class="ri-file-list-line" aria-hidden="true"></i>
+                                <p>Nenhuma transação registrada</p>
+                                <small>Adicione sua primeira transação acima</small>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+    
+        <div id="charts-section" class="nav-section">
+            <section class="chart-section" aria-labelledby="chart-section-title">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="section-title">
+                            <h2 id="chart-section-title"><i class="ri-bar-chart-line" aria-hidden="true"></i> Análise Financeira</h2>
+                            <p class="section-subtitle">Visualize seus dados financeiros</p>
+                        </div>
+                        <div class="chart-controls">
+                            <label for="chart-bank-filter" class="visually-hidden">Filtrar por banco</label>
+                            <select id="chart-bank-filter" class="chart-filter" aria-label="Filtrar gráficos por banco">
+                                <option value="all">Todos os Bancos</option>
+                            </select>
+                            <label for="chart-type-filter" class="visually-hidden">Tipo de gráfico</label>
+                            <select id="chart-type-filter" class="chart-filter" aria-label="Selecionar tipo de gráfico">
+                                <option value="category">Por Categoria</option>
+                                <option value="bank">Por Banco</option>
+                                <option value="timeline">Linha do Tempo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart" class="chart" role="img" aria-label="Gráfico financeiro"></div>
+                </div>
+            </section>
+        </div>
+
+ 
+        <div id="transaction-section" class="nav-section">
+            <section class="transaction-form-section" aria-labelledby="transaction-form-title">
+                <div class="form-container">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h2 id="transaction-form-title"><i class="ri-add-circle-line" aria-hidden="true"></i> Nova Transação</h2>
+                            <p class="section-subtitle">Registre uma nova receita ou despesa</p>
+                        </div>
+                    </div>
+                    <form id="transaction-form" class="transaction-form" aria-label="Formulário de Nova Transação">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="description">Descrição</label>
+                                <input type="text" id="description" placeholder="Ex: Mercado, Salário, Combustível" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="amount">Valor (R$)</label>
+                                <input type="number" id="amount" placeholder="0,00" min="0.01" step="0.01" required>
                             </div>
                         </div>
-                        <div class="input-group">
-                            <label for="category">Categoria</label>
-                            <select id="category" required aria-label="Categoria da transação">
-                                <option value="">Selecione uma categoria</option>
-                                <option value="Alimentação">🍽️ Alimentação</option>
-                                <option value="Transporte">🚗 Transporte</option>
-                                <option value="Lazer">🎮 Lazer</option>
-                                <option value="Trabalho">💼 Trabalho</option>
-                                <option value="Saúde">🏥 Saúde</option>
-                                <option value="Educação">📚 Educação</option>
-                                <option value="Moradia">🏠 Moradia</option>
-                                <option value="Compras">🛒 Compras</option>
-                                <option value="Investimentos">📈 Investimentos</option>
-                                <option value="Outros">📋 Outros</option>
-                            </select>
+                        
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>Tipo de Transação</label>
+                                <div class="radio-group" role="radiogroup" aria-labelledby="transaction-type-label">
+                                    <label class="radio-option">
+                                        <input type="radio" name="type" value="receita" checked aria-label="Receita">
+                                        <span class="radio-custom income" aria-hidden="true"></span>
+                                        <span>Receita</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="type" value="despesa" aria-label="Despesa">
+                                        <span class="radio-custom expense" aria-hidden="true"></span>
+                                        <span>Despesa</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="category">Categoria</label>
+                                <select id="category" required aria-label="Categoria da transação">
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="Alimentação">🍽️ Alimentação</option>
+                                    <option value="Transporte">🚗 Transporte</option>
+                                    <option value="Lazer">🎮 Lazer</option>
+                                    <option value="Trabalho">💼 Trabalho</option>
+                                    <option value="Saúde">🏥 Saúde</option>
+                                    <option value="Educação">📚 Educação</option>
+                                    <option value="Moradia">🏠 Moradia</option>
+                                    <option value="Compras">🛒 Compras</option>
+                                    <option value="Investimentos">📈 Investimentos</option>
+                                    <option value="Outros">📋 Outros</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-row">
-                        <div class="input-group">
-                            <label for="bank-select">Banco/Conta</label>
-                            <select id="bank-select" aria-label="Banco ou conta da transação">
-                                <option value="">💵 Dinheiro/Nenhum</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="payment-method">Método de Pagamento</label>
+                                <select id="payment-method" aria-label="Método de pagamento">
+                                    <option value="bank">💳 Conta Bancária</option>
+                                    <option value="cash">💵 Dinheiro</option>
+                                    <option value="credit">💳 Cartão de Crédito</option>
+                                </select>
+                            </div>
+                            <div class="input-group" id="bank-select-group">
+                                <label for="bank-select">Banco/Conta</label>
+                                <select id="bank-select" aria-label="Banco ou conta da transação">
+                                    <option value="">💵 Dinheiro/Nenhum</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label for="date">Data</label>
-                            <input type="date" id="date" required aria-label="Data da transação">
+
+                        <div id="credit-card-fields" class="form-row hidden">
+                            <div class="input-group">
+                                <label for="credit-card-select">Cartão de Crédito</label>
+                                <select id="credit-card-select" aria-label="Cartão de crédito">
+                                    <option value="">Selecione um cartão</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="installments">Parcelas</label>
+                                <select id="installments" aria-label="Número de parcelas">
+                                    <option value="1">1x (À vista)</option>
+                                    <option value="2">2x</option>
+                                    <option value="3">3x</option>
+                                    <option value="4">4x</option>
+                                    <option value="5">5x</option>
+                                    <option value="6">6x</option>
+                                    <option value="7">7x</option>
+                                    <option value="8">8x</option>
+                                    <option value="9">9x</option>
+                                    <option value="10">10x</option>
+                                    <option value="11">11x</option>
+                                    <option value="12">12x</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <button type="submit" class="btn-primary" aria-label="Adicionar Transação">
-                        <i class="ri-add-line" aria-hidden="true"></i>
-                        Adicionar Transação
-                    </button>
-                </form>
-            </div>
-        </section>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="date">Data</label>
+                                <input type="date" id="date" required aria-label="Data da transação">
+                            </div>
+                        </div>
 
-        <!-- Transactions List -->
-        <section class="transactions-section" aria-labelledby="transactions-section-title">
-            <div class="section-header">
-                <div class="section-title">
-                    <h2 id="transactions-section-title"><i class="ri-history-line" aria-hidden="true"></i> Histórico de Transações</h2>
-                    <p class="section-subtitle">Todas as suas movimentações financeiras</p>
+                        <button type="submit" class="btn-primary" aria-label="Adicionar Transação">
+                            <i class="ri-add-line" aria-hidden="true"></i>
+                            Adicionar Transação
+                        </button>
+                    </form>
                 </div>
-            </div>
-            <div class="transactions-container">
-                <ul id="transactions-list" class="transactions-list" aria-label="Lista de transações">
-                    <li class="no-transactions">
-                        <div class="empty-state">
-                            <i class="ri-file-list-line" aria-hidden="true"></i>
-                            <p>Nenhuma transação registrada</p>
-                            <small>Adicione sua primeira transação acima</small>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </section>
+            </section>
+        </div>
+
+        <div id="cards-section" class="nav-section">
+            <section class="cards-management" aria-labelledby="cards-section-title">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2 id="cards-section-title"><i class="ri-bank-card-line" aria-hidden="true"></i> Meus Cartões</h2>
+                        <p class="section-subtitle">Gerencie seus cartões de crédito</p>
+                    </div>
+                    <button id="add-card-btn" class="btn-secondary" aria-label="Adicionar novo cartão">
+                        <i class="ri-add-line" aria-hidden="true"></i> Adicionar Cartão
+                    </button>
+                </div>
+                <div id="cards-container" class="cards-grid"></div>
+            </section>
+        </div>
     </main>
 
-    <!-- Add/Edit Bank Modal -->
+
+    <nav class="mobile-nav hidden" aria-label="Navegação Mobile">
+        <button class="nav-item active" data-section="home-section" aria-label="Início">
+            <i class="ri-home-line"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" data-section="charts-section" aria-label="Gráficos">
+            <i class="ri-bar-chart-line"></i>
+            <span>Gráficos</span>
+        </button>
+        <button class="nav-item" data-section="transaction-section" aria-label="Nova Transação">
+            <i class="ri-add-circle-line"></i>
+            <span>Nova</span>
+        </button>
+        <button class="nav-item" data-section="cards-section" aria-label="Cartões">
+            <i class="ri-bank-card-line"></i>
+            <span>Cartões</span>
+        </button>
+    </nav>
+
     <div id="bank-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content">
             <div class="modal-header">
@@ -268,7 +345,6 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div id="delete-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
         <div class="modal-content">
             <div class="modal-header">
@@ -285,6 +361,74 @@
         </div>
     </div>
 
+    <div id="card-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="card-modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="card-modal-title">Adicionar Cartão de Crédito</h3>
+                <button id="close-card-modal" class="close-btn" aria-label="Fechar modal">
+                    <i class="ri-close-line" aria-hidden="true"></i>
+                </button>
+            </div>
+            <form id="card-form" class="card-form" aria-label="Formulário de Cartão de Crédito">
+                <div class="input-group">
+                    <label for="card-name">Nome do Cartão</label>
+                    <input type="text" id="card-name" placeholder="Ex: Nubank, Itaú, Bradesco" required>
+                </div>
+                <div class="input-group">
+                    <label for="card-limit">Limite (R$)</label>
+                    <input type="number" id="card-limit" placeholder="0,00" step="0.01" min="0" required>
+                    <small class="input-help">Limite total do cartão</small>
+                </div>
+                <div class="input-group">
+                    <label for="card-due-day">Dia do Vencimento</label>
+                    <select id="card-due-day" required>
+                        <option value="">Selecione o dia</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                        <option value="24">24</option>
+                        <option value="25">25</option>
+                        <option value="26">26</option>
+                        <option value="27">27</option>
+                        <option value="28">28</option>
+                    </select>
+                    <small class="input-help">Dia do mês em que vence a fatura</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-card" class="btn-secondary" aria-label="Cancelar e fechar">Cancelar</button>
+                    <button type="submit" class="btn-primary" aria-label="Salvar cartão">Salvar Cartão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+      window.NEXT_PUBLIC_SUPABASE_URL = "https://mtlkrjvgnamdvizrrjrf.supabase.co"
+      window.NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10bGtyanZnbmFtZHZpenJyanJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NjUxNTYsImV4cCI6MjA3NTI0MTE1Nn0.XTOIeMDVMCU16WUSgiRlLvWPFk4a52xZShHkyMOPk6I"
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="lib/supabase/client.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

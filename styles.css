@@ -7,25 +7,25 @@
 
 :root {
   /* Color Palette: Green, Pink, Red */
-  --primary-green: #10b981;
-  --secondary-green: #059669;
-  --light-green: #d1fae5;
-  --dark-green: #064e3b;
+  --primary-green: #22c55e;
+  --secondary-green: #16a34a;
+  --light-green: #dcfce7;
+  --dark-green: #15803d;
 
   --primary-pink: #ec4899;
   --secondary-pink: #db2777;
   --light-pink: #fce7f3;
-  --dark-pink: #831843;
+  --dark-pink: #be185d;
 
   --primary-red: #ef4444;
   --secondary-red: #dc2626;
   --light-red: #fee2e2;
-  --dark-red: #7f1d1d;
+  --dark-red: #b91c1c;
 
   /* Neutral Colors */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
+  --bg-primary: #1a0d1a; /* Dark pink base */
+  --bg-secondary: #0d1a0d; /* Dark green base */
+  --bg-tertiary: #1a0d0d; /* Dark red base */
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #64748b;
@@ -54,7 +54,8 @@
 
 body {
   font-family: "Poppins", sans-serif;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  /* Updated body background to use pink-green gradient */
+  background: linear-gradient(135deg, var(--primary-pink) 0%, var(--primary-green) 50%, var(--primary-red) 100%);
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
@@ -67,7 +68,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+  /* Updated login background to use colorful gradient */
+  background: linear-gradient(135deg, var(--primary-pink) 0%, var(--primary-green) 50%, var(--primary-red) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,13 +77,14 @@ body {
 }
 
 .login-container {
-  background: var(--bg-secondary);
+  /* Updated login container background */
+  background: rgba(13, 26, 13, 0.95);
   padding: var(--spacing-2xl);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
   width: 90%;
   max-width: 420px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--primary-green);
   backdrop-filter: blur(10px);
 }
 
@@ -187,6 +190,7 @@ body {
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, var(--secondary-green), var(--dark-green));
 }
 
 .btn-secondary {
@@ -252,7 +256,8 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(30, 41, 59, 0.95);
+  /* Updated navbar background to use pink gradient */
+  background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
   border-bottom: 1px solid var(--border-color);
   z-index: 100;
   backdrop-filter: blur(10px);
@@ -265,6 +270,7 @@ body {
   padding: var(--spacing-md) var(--spacing-lg);
   max-width: 1200px;
   margin: 0 auto;
+  /* Removed duplicate background gradient */
 }
 
 .nav-brand {
@@ -292,7 +298,7 @@ body {
 .logout-btn {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
   padding: var(--spacing-sm);
   border-radius: var(--radius-sm);
@@ -305,6 +311,63 @@ body {
   background: var(--bg-tertiary);
 }
 
+/* Mobile Navigation */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  min-width: 60px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.nav-item i {
+  font-size: 1.25rem;
+}
+
+.nav-item.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.nav-item:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Navigation Sections */
+.nav-section {
+  display: none;
+}
+
+.nav-section.active {
+  display: block;
+}
+
 /* Main Content */
 .main-content {
   padding-top: 140px;
@@ -313,6 +376,11 @@ body {
   margin: 0 auto;
   padding-left: var(--spacing-lg);
   padding-right: var(--spacing-lg);
+  /* Added semi-transparent background overlay */
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-xl);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 /* Section Headers */
@@ -352,8 +420,9 @@ body {
 }
 
 .bank-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  /* Updated bank card background to use green theme */
+  background: linear-gradient(135deg, rgba(13, 26, 13, 0.9), rgba(22, 163, 74, 0.1));
+  border: 1px solid var(--primary-green);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   transition: all 0.2s ease;
@@ -392,7 +461,13 @@ body {
   padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
-  font-size: 1rem;
+  white-space: nowrap;
+  min-width: fit-content;
+  /* Better touch targets for mobile */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bank-action-btn:hover {
@@ -400,75 +475,10 @@ body {
   background: var(--bg-tertiary);
 }
 
-.bank-balance {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: var(--spacing-sm);
-}
-
-.bank-balance.positive {
-  color: var(--primary-green);
-}
-
-.bank-balance.negative {
-  color: var(--primary-red);
-}
-
-.bank-balance.zero {
-  color: var(--text-muted);
-}
-
-.bank-transactions-count {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-}
-
-/* Bank Tabs */
-.bank-tabs-section {
-  margin-bottom: var(--spacing-xl);
-}
-
-.tabs-container {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-sm);
-  border: 1px solid var(--border-color);
-}
-
-.bank-tabs {
-  display: flex;
-  gap: var(--spacing-xs);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.bank-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.bank-tab {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  min-width: fit-content;
-}
-
-.bank-tab.active {
-  background: var(--primary-green);
-  color: white;
-}
-
-.bank-tab:hover:not(.active) {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
+/* Added focus states for better accessibility */
+.bank-action-btn:focus {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
 }
 
 /* Financial Summary */
@@ -483,8 +493,9 @@ body {
 }
 
 .summary-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  /* Updated summary cards to use themed backgrounds */
+  background: linear-gradient(135deg, rgba(26, 13, 26, 0.9), rgba(236, 72, 153, 0.1));
+  border: 1px solid var(--primary-pink);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   display: flex;
@@ -546,8 +557,9 @@ body {
 }
 
 .chart-container {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  /* Updated chart container background */
+  background: linear-gradient(135deg, rgba(26, 13, 13, 0.9), rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--primary-red);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
 }
@@ -587,6 +599,8 @@ body {
   width: 100%;
   height: 400px;
   border-radius: var(--radius-md);
+  /* Better mobile chart sizing */
+  min-height: 300px;
 }
 
 /* Transaction Form */
@@ -595,8 +609,9 @@ body {
 }
 
 .form-container {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  /* Updated form container background */
+  background: linear-gradient(135deg, rgba(13, 26, 13, 0.9), rgba(22, 163, 74, 0.1));
+  border: 1px solid var(--primary-green);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
 }
@@ -673,8 +688,9 @@ body {
 }
 
 .transactions-container {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  /* Updated transactions container background */
+  background: linear-gradient(135deg, rgba(26, 13, 26, 0.9), rgba(236, 72, 153, 0.1));
+  border: 1px solid var(--primary-pink);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -821,8 +837,9 @@ body {
 }
 
 .modal-content {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  /* Updated modal background */
+  background: linear-gradient(135deg, rgba(26, 13, 13, 0.95), rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--primary-red);
   border-radius: var(--radius-xl);
   padding: var(--spacing-xl);
   width: 90%;
@@ -880,11 +897,105 @@ body {
   gap: var(--spacing-lg);
 }
 
+/* Cards Management */
+.cards-management {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.card-item {
+  background: linear-gradient(135deg, rgba(26, 13, 26, 0.9), rgba(236, 72, 153, 0.1));
+  border: 1px solid var(--primary-pink);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-pink);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.card-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.card-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.card-action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.card-limit {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-green);
+  margin-bottom: var(--spacing-sm);
+}
+
+.card-available {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: var(--spacing-sm);
+}
+
+.card-available.positive {
+  color: var(--primary-green);
+}
+
+.card-available.negative {
+  color: var(--primary-red);
+}
+
+.card-due-date {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.card-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .main-content {
     padding-left: var(--spacing-md);
     padding-right: var(--spacing-md);
+    padding-top: var(--spacing-lg);
+    padding-bottom: 100px; /* Space for mobile nav */
   }
 
   .section-header {
@@ -931,6 +1042,65 @@ body {
   .banks-grid {
     grid-template-columns: 1fr;
   }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Improved mobile tabs styling */
+  .tabs-container {
+    padding: var(--spacing-xs);
+    margin: 0 calc(-1 * var(--spacing-md));
+  }
+
+  .bank-tabs {
+    padding: 0 var(--spacing-md);
+  }
+
+  .bank-tab {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.8rem;
+    min-width: auto;
+    flex-shrink: 0;
+    background-color: var(--dark-pink);
+    color: white;
+    border-radius: 80px; 
+  }
+
+  /* Better mobile chart responsiveness */
+  .chart {
+    height: 320px;
+  }
+
+  .chart-container {
+    padding: var(--spacing-lg);
+  }
+
+  .navbar {
+    display: none !important;
+  }
+
+  .mobile-nav {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-nav {
+    display: none !important;
+  }
+
+  .navbar {
+    display: block !important;
+  }
+
+  .nav-section {
+    display: block !important;
+  }
+
+  .nav-section.active {
+    display: block;
+  }
 }
 
 @media (max-width: 480px) {
@@ -939,19 +1109,19 @@ body {
   }
 
   .chart {
-    height: 300px;
+    height: 280px;
   }
 
-  .nav-content {
-    padding: var(--spacing-md);
+  /* Even smaller mobile optimizations */
+  .bank-tab {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.75rem;
+    background-color: var(--dark-pink);
+    color: white;
   }
 
-  .app-title {
-    font-size: 1rem;
-  }
-
-  .nav-logo {
-    font-size: 1.25rem;
+  .tabs-container {
+    border-radius: var(--radius-md);
   }
 }
 
@@ -999,7 +1169,8 @@ input[type="number"] {
 
 .bank-card,
 .summary-card,
-.transaction-item {
+.transaction-item,
+.card-item {
   animation: fadeIn 0.3s ease-out;
 }
 
